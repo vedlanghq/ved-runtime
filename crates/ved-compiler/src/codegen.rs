@@ -1,55 +1,6 @@
 use crate::ast::{Ast, Expr, Statement, DomainDecl};
 use std::collections::HashMap;
-
-/// Represents primitive values in the Ved constant pool
-#[derive(Debug, Clone, PartialEq)]
-pub enum Constant {
-    Int(i64),
-    String(String),
-}
-
-/// The core ISA for the Ved VM (Register-based, deterministic)
-#[derive(Debug, Clone, PartialEq)]
-pub enum OpCode {
-    LoadConst { const_idx: usize, dest_reg: u8 },
-    LoadState { field_idx: usize, dest_reg: u8 },
-    StoreState { src_reg: u8, field_idx: usize },
-    AddInt { r1: u8, r2: u8, dest: u8 },
-    SubInt { r1: u8, r2: u8, dest: u8 },
-    CmpEq { r1: u8, r2: u8, dest: u8 },
-    CmpLt { r1: u8, r2: u8, dest: u8 },
-    CmpGt { r1: u8, r2: u8, dest: u8 },
-    JumpIfFalse { test_reg: u8, target_offset: usize },
-    Jump { target_offset: usize },
-    HaltSlice,
-}
-
-#[derive(Debug, Clone)]
-pub struct TransitionBytecode {
-    pub name: String,
-    pub constants: Vec<Constant>,
-    pub instructions: Vec<OpCode>,
-}
-
-#[derive(Debug, Clone)]
-pub struct GoalBytecode {
-    pub name: String,
-    pub constants: Vec<Constant>,
-    pub instructions: Vec<OpCode>,
-}
-
-#[derive(Debug, Clone)]
-pub struct DomainBytecode {
-    pub name: String,
-    pub state_schema: Vec<String>, // ordered list of state field names mapping to index
-    pub transitions: Vec<TransitionBytecode>,
-    pub goals: Vec<GoalBytecode>,
-}
-
-#[derive(Debug, Clone)]
-pub struct BytecodeProgram {
-    pub domains: Vec<DomainBytecode>,
-}
+pub use ved_ir::bytecode::*;
 
 pub struct CodeGenerator {
     program: BytecodeProgram,
@@ -98,7 +49,7 @@ impl CodeGenerator {
         let mut goals = Vec::new();
         for goal in &domain.goals {
             let mut cg = FuncGen::new(&field_map);
-            let res_reg = cg.compile_expr(&goal.target);
+            let _res_reg = cg.compile_expr(&goal.target);
             // goals typically return a boolean, so the result is left in `res_reg`
             cg.emit(OpCode::HaltSlice);
             goals.push(GoalBytecode {
@@ -220,9 +171,11 @@ impl<'a> FuncGen<'a> {
                 
                 cond_reg // returns condition bool register for now...
             }
-            Expr::Send { target: _, message: _ } => {
-                // Not fully mapped to opcode yet
-                self.alloc_reg()
+            Expr::Send { target, message } => {
+                let target_const_idx = self.add_constant(Constant::String(target.clone()));
+                let msg_const_idx = self.add_constant(Constant::String(message.clone()));
+                self.emit(OpCode::SendMsg { target_const_idx, msg_const_idx });
+                self.alloc_reg() // Return dummy register
             }
         }
     }

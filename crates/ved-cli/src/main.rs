@@ -1,4 +1,9 @@
 use std::env;
+use std::path::PathBuf;
+
+use ved_runtime::domain_registry::{DomainInstance, DomainRegistry};
+use ved_runtime::scheduler::Scheduler;
+use ved_runtime::messaging::Message;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -7,19 +12,71 @@ fn main() {
         println!("ved <command>");
         println!("Commands:");
         println!("  compile <file.ved>   - Compile a Ved file to bytecode");
-        println!("  run <bundle.vedc>    - Run a Ved bytecode bundle");
+        println!("  run <file.ved>       - Run a Ved file directly");
         return;
     }
 
     match args[1].as_str() {
         "run" => {
             if args.len() < 3 {
-                println!("Error: Missing bundle file.\nUsage: ved run <bundle.vedc>");
+                println!("Error: Missing source file.\nUsage: ved run <file.ved>");
                 return;
             }
-            let bundle_path = &args[2];
-            println!("Starting Ved runtime with bundle: {}", bundle_path);
-            ved_runtime::scheduler::run_loop();
+            let source_path = &args[2];
+            println!("[CLI] Reading source: {}", source_path);
+            let source = std::fs::read_to_string(source_path).unwrap_or_else(|e| {
+                println!("Error reading {}: {}", source_path, e);
+                std::process::exit(1);
+            });
+
+            println!("[CLI] Compiling...");
+            match ved_compiler::compile_source(&source) {
+                Ok(program) => {
+                    println!("[CLI] Compilation successful. Initiating Phase 3 Runtime.\n");
+                    
+                    let mut registry = DomainRegistry::new();
+
+                    for domain in program.domains {
+                        println!("[Runtime] Initializing Domain: {}", domain.name);
+                        let instance = DomainInstance::new(
+                            domain.name.clone(),
+                            domain.state_schema.clone(),
+                            domain.clone(),
+                        );
+                        registry.register(instance);
+                    }
+
+                    let start_domain = if registry.instances.contains_key("Producer") {
+                        "Producer"
+                    } else if let Some(first_domain) = registry.instances.keys().next() {
+                        first_domain
+                    } else {
+                        println!("[CLI] No domains loaded.");
+                        return;
+                    };
+
+                    let boot_msg = Message {
+                        target_domain: start_domain.to_string(),
+                        payload: "send_ping".to_string(), priority: 0,
+                    };
+
+                    println!("[CLI] Seeding boot message: {:?}", boot_msg);
+                    registry.route_message(boot_msg);
+
+                    let mut scheduler = Scheduler::new(registry);
+                    println!("\n================ SCHEDULER START ================");
+                    let trace = scheduler.execute_until_quiescent();
+                    for line in trace {
+                        println!("{}", line);
+                    }
+                    println!("================ SCHEDULER HALT =================\n");
+                    
+                    println!("[CLI] Phase 3 execution complete. Quiescence reached.");
+                }
+                Err(e) => {
+                    println!("Error during compilation:\n{}", e);
+                }
+            }
         }
         "compile" => {
             if args.len() < 3 {
@@ -27,8 +84,11 @@ fn main() {
                 return;
             }
             let source_path = &args[2];
-            println!("Compiling Ved source: {}", source_path);
-            ved_compiler::compile(source_path);
+            let source = std::fs::read_to_string(source_path).unwrap();
+            match ved_compiler::compile_source(&source) {
+                Ok(_program) => println!("Compilation successful."),
+                Err(e) => println!("Error during compilation:\n{}", e),
+            }
         }
         _ => println!("Unknown command: {}", args[1]),
     }

@@ -4,3 +4,4 @@ pub mod interpreter;
 pub mod goal_engine;
 pub mod messaging;
 pub mod persistence;
+pub mod state;
