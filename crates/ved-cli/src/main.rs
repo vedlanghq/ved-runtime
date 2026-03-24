@@ -73,10 +73,13 @@ fn main() {
                             println!("[CLI] No domains loaded.");
                             return;
                         };
+                        
+                        let first_trans = registry.instances.get(start_domain).unwrap().bytecode.transitions.first();
+                        let default_trans_name = if let Some(trans) = first_trans { trans.name.clone() } else { "send_ping".to_string() };
 
                         let boot_msg = Message {
                             target_domain: start_domain.to_string(),
-                            payload: "send_ping".to_string(),
+                            payload: default_trans_name,
                             priority: 0,
                         };
 

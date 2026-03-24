@@ -1,6 +1,7 @@
 use crate::domain_registry::DomainRegistry;
 use crate::interpreter::Interpreter;
 use crate::persistence::SnapshotManager;
+use crate::goal_engine::GoalEngine;
 
 pub struct Scheduler {
     registry: DomainRegistry,
@@ -44,6 +45,21 @@ impl Scheduler {
 
             for name in domain_names_sorted {
                 let instance = self.registry.get_mut(&name).unwrap();
+
+                // 1. Evaluate Goals
+                // If a goal evaluates to true, we don't automatically stop the runtime, 
+                // but we might log it or trigger a transition. For v0.1: just log if semantic goal is met.
+                for goal in &instance.bytecode.goals {
+                    match GoalEngine::evaluate(goal, &instance.state, &instance.schema, slice_gas_limit) {
+                        Ok(true) => {
+                            trace.push(format!("[Scheduler Cycle {}] Domain '{}' achieved GOAL: '{}'", cycle, name, goal.name));
+                        }
+                        Ok(false) => { /* Goal not yet met */ }
+                        Err(e) => {
+                            trace.push(format!("[Scheduler Cycle {}] Domain '{}' goal error in '{}': {}", cycle, name, goal.name, e));
+                        }
+                    }
+                }
 
                 if let Some(msg) = instance.mailbox.pop() {
                     active = true;
