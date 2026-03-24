@@ -23,13 +23,18 @@ impl Interpreter {
     }
 
     /// Executes a deterministic slice of bytecode, returning messages to route.
-    pub fn run_slice(&mut self, trans: &TransitionBytecode, field_names: &[String]) -> Result<Vec<Message>, String> {
+    pub fn run_slice(&mut self, trans: &TransitionBytecode, field_names: &[String], gas_limit: usize) -> Result<Vec<Message>, String> {
+        let mut gas_used = 0;
         let mut pc = 0;
         let code = &trans.instructions;
         let consts = &trans.constants;
         let mut outbox = Vec::new();
 
         while pc < code.len() {
+            if gas_used >= gas_limit {
+                return Err(format!("Slice exhausted gas boundary (Max {} instructions)", gas_limit));
+            }
+            gas_used += 1;
             let inst = &code[pc];
             pc += 1;
 
@@ -122,7 +127,7 @@ mod tests {
             ],
         };
 
-        let res = interp.run_slice(&trans, &fields);
+        let res = interp.run_slice(&trans, &fields, 1000);
         assert!(res.is_ok());
         assert_eq!(interp.state.get("counter"), Some(11));
     }

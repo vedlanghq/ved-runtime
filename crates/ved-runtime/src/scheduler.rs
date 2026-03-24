@@ -1,18 +1,25 @@
 use crate::domain_registry::DomainRegistry;
 use crate::interpreter::Interpreter;
+use crate::persistence::SnapshotManager;
 
 pub struct Scheduler {
     registry: DomainRegistry,
+    snapshot_mgr: Option<SnapshotManager>,
 }
 
 impl Scheduler {
     pub fn new(registry: DomainRegistry) -> Self {
-        Self { registry }
+        Self { registry, snapshot_mgr: None }
+    }
+
+    pub fn with_snapshots(mut self, mgr: SnapshotManager) -> Self {
+        self.snapshot_mgr = Some(mgr);
+        self
     }
 
     /// Run the simulation until all inboxes are empty.
     /// Returns a full deterministic trace of execution.
-    pub fn execute_until_quiescent(&mut self) -> Vec<String> {
+    pub fn execute_until_quiescent(&mut self, max_cycles: usize, slice_gas_limit: usize) -> Vec<String> {
         let mut active = true;
         let mut cycle = 0;
         let mut trace = Vec::new();
@@ -20,15 +27,20 @@ impl Scheduler {
         trace.push("[Scheduler] Starting execution loop...".to_string());
 
         while active {
+            if cycle >= max_cycles {
+                trace.push(format!("[Scheduler] HALT: Max cycles {} reached. Stopping to prevent infinite loop.", max_cycles));
+                break;
+            }
             active = false;
             cycle += 1;
 
             let mut outbox_all = Vec::new();
 
-            let domain_names: Vec<String> = self.registry.instances.keys().cloned().collect();
             // Deterministic sort is absolutely critical here to prevent HashMap iteration randomness
-            let mut domain_names_sorted = domain_names.clone();
-            domain_names_sorted.sort();
+            let mut domains_with_weights: Vec<(String, u8)> = self.registry.instances.iter().map(|(k, v)| (k.clone(), v.schedule_weight)).collect();
+        domains_with_weights.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
+        let domain_names_sorted: Vec<String> = domains_with_weights.into_iter().map(|(k, _)| k).collect();
+            
 
             for name in domain_names_sorted {
                 let instance = self.registry.get_mut(&name).unwrap();
@@ -47,7 +59,7 @@ impl Scheduler {
 
                     if let Some(trans) = matched_trans {
                         let mut interpreter = Interpreter::with_state(instance.state.snapshot());
-                        match interpreter.run_slice(&trans, &instance.schema) {
+                        match interpreter.run_slice(&trans, &instance.schema, slice_gas_limit) {
                             Ok(outbox) => {
                                 instance.state = interpreter.state;
                                 // Sort state keys for deterministic trace output
@@ -78,6 +90,17 @@ impl Scheduler {
                     trace.push(format!("[Scheduler Cycle {}] ROUTING ERROR (Mailbox Full): {:?}", cycle, e));
                 } else {
                     active = true;
+                }
+            }
+
+            if let Some(mgr) = &self.snapshot_mgr {
+                // Determine if we should save. We save if this cycle was active.
+                if active {
+                    if let Err(e) = mgr.save(cycle, &self.registry) {
+                        trace.push(format!("[Scheduler Cycle {}] SNAPSHOT ERROR: {}", cycle, e));
+                    } else {
+                        trace.push(format!("[Scheduler Cycle {}] Snapshot saved successfully.", cycle));
+                    }
                 }
             }
         }
@@ -175,7 +198,7 @@ mod tests {
                 priority: 0,
             });
             let mut scheduler = Scheduler::new(registry);
-            let trace = scheduler.execute_until_quiescent();
+            let trace = scheduler.execute_until_quiescent(1000, 1000);
             if i == 0 {
                 first_trace = trace;
             } else {

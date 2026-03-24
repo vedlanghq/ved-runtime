@@ -1,0 +1,14 @@
+{
+  "cycle": 3,
+  "domains": {
+    "Producer": {
+      "state": {
+        "memory": {
+          "val": 5
+        }
+      },
+      "mailbox_high": [],
+      "mailbox_normal": []
+    }
+  }
+}

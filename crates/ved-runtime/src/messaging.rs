@@ -1,6 +1,7 @@
 use std::collections::VecDeque;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Message {
     pub target_domain: String,
     pub payload: String,

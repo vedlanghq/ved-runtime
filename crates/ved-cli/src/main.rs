@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use ved_runtime::domain_registry::{DomainInstance, DomainRegistry};
 use ved_runtime::scheduler::Scheduler;
 use ved_runtime::messaging::Message;
+use ved_runtime::persistence::SnapshotManager;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -32,8 +33,7 @@ fn main() {
             println!("[CLI] Compiling...");
             match ved_compiler::compile_source(&source) {
                 Ok(program) => {
-                    println!("[CLI] Compilation successful. Initiating Phase 3 Runtime.\n");
-                    
+                    println!("[CLI] Compilation successful. Initiating Runtime.");
                     let mut registry = DomainRegistry::new();
 
                     for domain in program.domains {
@@ -46,32 +46,60 @@ fn main() {
                         registry.register(instance);
                     }
 
-                    let start_domain = if registry.instances.contains_key("Producer") {
-                        "Producer"
-                    } else if let Some(first_domain) = registry.instances.keys().next() {
-                        first_domain
-                    } else {
-                        println!("[CLI] No domains loaded.");
-                        return;
-                    };
+                    let snapshot_file = format!("{}.snapshot.json", source_path);
+                    let snapshot_mgr = SnapshotManager::new(&snapshot_file);
+                    let mut is_resumed = false;
 
-                    let boot_msg = Message {
-                        target_domain: start_domain.to_string(),
-                        payload: "send_ping".to_string(), priority: 0,
-                    };
+                    match snapshot_mgr.load() {
+                        Ok(data) => {
+                            println!("[CLI] Resuming from snapshot (cycle {})...", data.cycle);
+                            if let Err(e) = snapshot_mgr.restore_into(data, &mut registry) {
+                                println!("[CLI] Critical Error restoring snapshot: {}", e);
+                                std::process::exit(1);
+                            }
+                            is_resumed = true;
+                        }
+                        Err(e) => {
+                            println!("[CLI] No valid snapshot found ({}). Starting fresh.", e);
+                        }
+                    }
 
-                    println!("[CLI] Seeding boot message: {:?}", boot_msg);
-                    registry.route_message(boot_msg);
+                    if !is_resumed {
+                        let start_domain = if registry.instances.contains_key("Producer") {
+                            "Producer"
+                        } else if let Some(first_domain) = registry.instances.keys().next() {
+                            first_domain
+                        } else {
+                            println!("[CLI] No domains loaded.");
+                            return;
+                        };
 
-                    let mut scheduler = Scheduler::new(registry);
+                        let boot_msg = Message {
+                            target_domain: start_domain.to_string(),
+                            payload: "send_ping".to_string(),
+                            priority: 0,
+                        };
+
+                        println!("[CLI] Seeding boot message: {:?}", boot_msg);
+                        let _ = registry.route_message(boot_msg);
+                    }
+
+                    let mut scheduler = Scheduler::new(registry).with_snapshots(snapshot_mgr);
                     println!("\n================ SCHEDULER START ================");
-                    let trace = scheduler.execute_until_quiescent();
+                    
+                    let mut max_cycles = 100;
+                    if args.len() > 3 {
+                        if let Ok(c) = args[3].parse::<usize>() {
+                            max_cycles = c;
+                        }
+                    }
+
+                    let trace = scheduler.execute_until_quiescent(max_cycles, 1000);
                     for line in trace {
                         println!("{}", line);
                     }
-                    println!("================ SCHEDULER HALT =================\n");
-                    
-                    println!("[CLI] Phase 3 execution complete. Quiescence reached.");
+                    println!("================ SCHEDULER HALT ================\n");
+                    println!("[CLI] Execution complete. Quiescence reached.");
                 }
                 Err(e) => {
                     println!("Error during compilation:\n{}", e);

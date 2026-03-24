@@ -1,11 +1,12 @@
 use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
 
 /// Provides a strict, isolated memory boundary for a single Domain.
 /// Ensures no shared mutable state, no accidental pointer aliasing,
 /// and strictly enforces the domain's schema constraints.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct IsolatedState {
-    memory: HashMap<String, i64>,
+    pub memory: HashMap<String, i64>,
 }
 
 impl IsolatedState {

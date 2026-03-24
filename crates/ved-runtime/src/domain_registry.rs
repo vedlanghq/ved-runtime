@@ -9,6 +9,7 @@ pub struct DomainInstance {
     pub schema: Vec<String>,
     pub bytecode: DomainBytecode,
     pub mailbox: Mailbox,
+    pub schedule_weight: u8, // Higher weight = executes earlier in the cycle
 }
 
 impl DomainInstance {
@@ -21,7 +22,13 @@ impl DomainInstance {
             schema,
             bytecode,
             mailbox: Mailbox::default(), // 100 capacity by default
+            schedule_weight: 1,          // Default baseline priority
         }
+    }
+
+    pub fn with_weight(mut self, weight: u8) -> Self {
+        self.schedule_weight = weight;
+        self
     }
 }
 
