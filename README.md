@@ -29,12 +29,26 @@ continuously stabilize distributed software environments.
 
 Early prototype.
 
-Initial milestones include:
+Initial milestones achieved:
 
-- bytecode execution loop
-- append-only journal
-- deterministic scheduler skeleton
-- basic domain state model
+- Bytecode execution loop
+- Append-only journal & snapshots
+- Deterministic scheduler and logical clocks
+- Basic domain state model
+- Developer Experience tools (structured traces, basic compiler errors)
+
+## CLI Usage
+
+The `ved-cli` provides commands to run and inspect Ved programs:
+
+- **Run a program:** `cargo run -p ved-cli -- run path/to/file.ved`
+  This compiles the file, runs the scheduler, generates snapshot states (`.snapshot.json`), and creates an execution trace file (`.trace.json`).
+
+- **View a trace:** `cargo run -p ved-cli -- view-trace path/to/file.trace.json`
+  Prints a formatted, human-readable view of the exact sequence of domain state changes and messages.
+
+- **Compile only:** `cargo run -p ved-cli -- compile path/to/file.ved`
+  Validates syntax and semantics without running the scheduler.
 
 ## Repository Structure (planned)
 

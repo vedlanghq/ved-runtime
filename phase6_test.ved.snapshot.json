@@ -1,0 +1,23 @@
+{
+  "cycle": 5,
+  "domains": {
+    "Producer": {
+      "state": {
+        "memory": {
+          "sent": 2
+        }
+      },
+      "mailbox_high": [],
+      "mailbox_normal": []
+    },
+    "Consumer": {
+      "state": {
+        "memory": {
+          "pings": 4
+        }
+      },
+      "mailbox_high": [],
+      "mailbox_normal": []
+    }
+  }
+}

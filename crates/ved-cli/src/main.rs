@@ -1,5 +1,4 @@
 use std::env;
-use std::path::PathBuf;
 
 use ved_runtime::domain_registry::{DomainInstance, DomainRegistry};
 use ved_runtime::scheduler::Scheduler;
@@ -12,12 +11,38 @@ fn main() {
     if args.len() < 2 {
         println!("ved <command>");
         println!("Commands:");
-        println!("  compile <file.ved>   - Compile a Ved file to bytecode");
-        println!("  run <file.ved>       - Run a Ved file directly");
+        println!("  compile <file.ved>       - Compile a Ved file to bytecode");
+        println!("  run <file.ved>           - Run a Ved file directly");
+        println!("  view-trace <trace.json>  - View an execution trace");
         return;
     }
 
     match args[1].as_str() {
+        "view-trace" => {
+            if args.len() < 3 {
+                println!("Error: Missing trace file.\nUsage: ved view-trace <file.trace.json>");
+                return;
+            }
+            let trace_path = &args[2];
+            println!("[CLI] Loading execution trace: {}", trace_path);
+            let content = std::fs::read_to_string(trace_path).unwrap_or_else(|e| {
+                println!("Error reading trace file: {}", e);
+                std::process::exit(1);
+            });
+            
+            match ved_tracer::Tracer::format_trace_from_json(&content) {
+                Ok(lines) => {
+                    println!("\n--- EXECUTION TRACE VIEW ---");
+                    for line in lines {
+                        println!("{}", line);
+                    }
+                    println!("----------------------------");
+                }
+                Err(e) => {
+                    println!("Failed to parse trace JSON: {}", e);
+                }
+            }
+        }
         "run" => {
             if args.len() < 3 {
                 println!("Error: Missing source file.\nUsage: ved run <file.ved>");
@@ -66,21 +91,27 @@ fn main() {
 
                     if !is_resumed {
                         let start_domain = if registry.instances.contains_key("Producer") {
-                            "Producer"
-                        } else if let Some(first_domain) = registry.instances.keys().next() {
+                            "Producer".to_string()
+                        } else if let Some(first_domain) = {
+                            // Sort keys deterministically
+                            let mut keys: Vec<&String> = registry.instances.keys().collect();
+                            keys.sort();
+                            keys.first().map(|k| k.to_string())
+                        } {
                             first_domain
                         } else {
                             println!("[CLI] No domains loaded.");
                             return;
                         };
-                        
-                        let first_trans = registry.instances.get(start_domain).unwrap().bytecode.transitions.first();
-                        let default_trans_name = if let Some(trans) = first_trans { trans.name.clone() } else { "send_ping".to_string() };
+
+                        let first_trans = registry.instances.get(&start_domain).unwrap().bytecode.transitions.first();
+                        let default_trans_name = if let Some(trans) = first_trans { trans.name.clone() } else { "run".to_string() };
 
                         let boot_msg = Message {
                             target_domain: start_domain.to_string(),
                             payload: default_trans_name,
                             priority: 0,
+                            clock: 0,
                         };
 
                         println!("[CLI] Seeding boot message: {:?}", boot_msg);
@@ -101,6 +132,15 @@ fn main() {
                     for line in trace {
                         println!("{}", line);
                     }
+                    
+                    let trace_file = format!("{}.trace.json", source_path);
+                    let json_trace = scheduler.tracer.dump_json();
+                    if let Err(e) = std::fs::write(&trace_file, json_trace) {
+                        println!("[CLI] Error writing trace file: {}", e);
+                    } else {
+                        println!("[CLI] Wrote execution trace to {}", trace_file);
+                    }
+
                     println!("================ SCHEDULER HALT ================\n");
                     println!("[CLI] Execution complete. Quiescence reached.");
                 }

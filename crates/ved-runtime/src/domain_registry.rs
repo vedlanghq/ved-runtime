@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use ved_ir::bytecode::DomainBytecode;
 use crate::state::IsolatedState;
 use crate::messaging::{Message, Mailbox};
+use crate::logical_clock::LogicalClock;
 
 pub struct DomainInstance {
     pub name: String,
@@ -10,6 +11,7 @@ pub struct DomainInstance {
     pub bytecode: DomainBytecode,
     pub mailbox: Mailbox,
     pub schedule_weight: u8, // Higher weight = executes earlier in the cycle
+    pub logical_clock: LogicalClock,
 }
 
 impl DomainInstance {
@@ -23,6 +25,7 @@ impl DomainInstance {
             bytecode,
             mailbox: Mailbox::default(), // 100 capacity by default
             schedule_weight: 1,          // Default baseline priority
+            logical_clock: LogicalClock::new(),
         }
     }
 

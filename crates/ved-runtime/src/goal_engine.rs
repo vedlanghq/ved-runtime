@@ -53,6 +53,14 @@ impl GoalEngine {
                     interp.registers[*dest as usize] = if interp.registers[*r1 as usize] > interp.registers[*r2 as usize] { 1 } else { 0 };
                     last_written_reg = Some(*dest);
                 }
+                OpCode::CmpGte { r1, r2, dest } => {
+                    interp.registers[*dest as usize] = if interp.registers[*r1 as usize] >= interp.registers[*r2 as usize] { 1 } else { 0 };
+                    last_written_reg = Some(*dest);
+                }
+                OpCode::CmpLte { r1, r2, dest } => {
+                    interp.registers[*dest as usize] = if interp.registers[*r1 as usize] <= interp.registers[*r2 as usize] { 1 } else { 0 };
+                    last_written_reg = Some(*dest);
+                }
                 OpCode::HaltSlice => break,
                 // We prevent goals from mutating state or sending messages
                 OpCode::StoreState { .. } | OpCode::SendMsg { .. } => {

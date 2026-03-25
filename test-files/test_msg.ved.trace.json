@@ -1,0 +1,32 @@
+[
+  {
+    "cycle": 1,
+    "domain": "Producer",
+    "action": "PROCESS_MESSAGE",
+    "details": "send_ping"
+  },
+  {
+    "cycle": 1,
+    "domain": "Producer",
+    "action": "STATE_MUTATED",
+    "details": "\"sent\": 1"
+  },
+  {
+    "cycle": 1,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: receive_ping, Target: Consumer"
+  },
+  {
+    "cycle": 2,
+    "domain": "Consumer",
+    "action": "PROCESS_MESSAGE",
+    "details": "receive_ping"
+  },
+  {
+    "cycle": 2,
+    "domain": "Consumer",
+    "action": "STATE_MUTATED",
+    "details": "\"pings\": 1"
+  }
+]

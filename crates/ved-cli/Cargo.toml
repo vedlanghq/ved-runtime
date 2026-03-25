@@ -6,5 +6,6 @@ edition = "2021"
 [dependencies]
 ved-compiler = { path = "../ved-compiler" }
 ved-runtime = { path = "../ved-runtime" }
+ved-tracer = { version = "0.1.0", path = "../ved-tracer" }
 
 # Using basic clap for CLI arguments (optional but recommended in earlier plan, although we can stick to std::env::args first. I will just use standard args to keep it brutally simple as Phase 0).

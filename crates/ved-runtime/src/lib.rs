@@ -5,3 +5,5 @@ pub mod goal_engine;
 pub mod messaging;
 pub mod persistence;
 pub mod state;
+pub mod logical_clock;
+pub mod rng;

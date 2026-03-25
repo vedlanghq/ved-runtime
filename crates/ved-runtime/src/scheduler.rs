@@ -2,15 +2,29 @@ use crate::domain_registry::DomainRegistry;
 use crate::interpreter::Interpreter;
 use crate::persistence::SnapshotManager;
 use crate::goal_engine::GoalEngine;
+use crate::rng::DeterministicRng;
+use ved_tracer::Tracer;
 
 pub struct Scheduler {
     registry: DomainRegistry,
     snapshot_mgr: Option<SnapshotManager>,
+    rng: DeterministicRng,
+    pub tracer: Tracer,
 }
 
 impl Scheduler {
     pub fn new(registry: DomainRegistry) -> Self {
-        Self { registry, snapshot_mgr: None }
+        Self { 
+            registry, 
+            snapshot_mgr: None, 
+            rng: DeterministicRng::new(0),
+            tracer: Tracer::new(),
+        }
+    }
+
+    pub fn with_seed(mut self, seed: u64) -> Self {
+        self.rng = DeterministicRng::new(seed);
+        self
     }
 
     pub fn with_snapshots(mut self, mgr: SnapshotManager) -> Self {
@@ -52,10 +66,12 @@ impl Scheduler {
                 for goal in &instance.bytecode.goals {
                     match GoalEngine::evaluate(goal, &instance.state, &instance.schema, slice_gas_limit) {
                         Ok(true) => {
+                            self.tracer.record(cycle, &name, "GOAL_MET", &goal.name);
                             trace.push(format!("[Scheduler Cycle {}] Domain '{}' achieved GOAL: '{}'", cycle, name, goal.name));
                         }
                         Ok(false) => { /* Goal not yet met */ }
                         Err(e) => {
+                            self.tracer.record(cycle, &name, "GOAL_ERROR", &e);
                             trace.push(format!("[Scheduler Cycle {}] Domain '{}' goal error in '{}': {}", cycle, name, goal.name, e));
                         }
                     }
@@ -63,8 +79,12 @@ impl Scheduler {
 
                 if let Some(msg) = instance.mailbox.pop() {
                     active = true;
-                    trace.push(format!("[Scheduler Cycle {}] Domain '{}' processing message: '{}' (Priority {})", cycle, name, msg.payload, msg.priority));
-
+                    instance.logical_clock.update(msg.clock);
+                    instance.logical_clock.tick();
+                    
+                    self.tracer.record(cycle, &name, "PROCESS_MESSAGE", &msg.payload);
+                    trace.push(format!("[Scheduler Cycle {}] Domain '{}' processing message: '{}' (Priority {}, Clock: {})", cycle, name, msg.payload, msg.priority, msg.clock));
+                    
                     let mut matched_trans = None;
                     for t in &instance.bytecode.transitions {
                         if t.name == msg.payload {
@@ -76,7 +96,7 @@ impl Scheduler {
                     if let Some(trans) = matched_trans {
                         let mut interpreter = Interpreter::with_state(instance.state.snapshot());
                         match interpreter.run_slice(&trans, &instance.schema, slice_gas_limit) {
-                            Ok(outbox) => {
+                            Ok(mut outbox) => {
                                 instance.state = interpreter.state;
                                 // Sort state keys for deterministic trace output
                                 let state_keys = instance.state.keys_sorted();
@@ -86,7 +106,14 @@ impl Scheduler {
                                     .collect::<Vec<_>>()
                                     .join(", ");
 
+                                self.tracer.record(cycle, &name, "STATE_MUTATED", &state_str);
                                 trace.push(format!("[Scheduler Cycle {}] Domain '{}' state AFTER '{}': {{{}}}", cycle, name, trans.name, state_str));
+
+                                // Assign logical clocks to outgoing messages
+                                for out_msg in &mut outbox {
+                                    instance.logical_clock.tick();
+                                    out_msg.clock = instance.logical_clock.tick;
+                                }
 
                                 outbox_all.extend(outbox);
                             }
@@ -101,7 +128,9 @@ impl Scheduler {
             }
 
             for msg in outbox_all {
-                trace.push(format!("[Scheduler Cycle {}] Routing message -> [Target: {}, Payload: {}, Priority: {}]", cycle, msg.target_domain, msg.payload, msg.priority));
+                let msg_details = format!("Payload: {}, Target: {}", msg.payload, msg.target_domain);
+                self.tracer.record(cycle, "SYSTEM", "ROUTING_MESSAGE", &msg_details);
+                trace.push(format!("[Scheduler Cycle {}] Routing message -> [Target: {}, Payload: {}, Priority: {}, Clock: {}]", cycle, msg.target_domain, msg.payload, msg.priority, msg.clock));
                 if let Err(e) = self.registry.route_message(msg) {
                     trace.push(format!("[Scheduler Cycle {}] ROUTING ERROR (Mailbox Full): {:?}", cycle, e));
                 } else {
@@ -212,6 +241,7 @@ mod tests {
                 target_domain: "Producer".to_string(),
                 payload: "send_ping".to_string(),
                 priority: 0,
+                clock: 0,
             });
             let mut scheduler = Scheduler::new(registry);
             let trace = scheduler.execute_until_quiescent(1000, 1000);
@@ -235,6 +265,7 @@ mod tests {
                 target_domain: "Consumer".to_string(),
                 payload: "receive_ping".to_string(),
                 priority: 0,
+                clock: 0,
             });
             if i < 2 {
                 assert!(res.is_ok(), "First 2 messages should push fine");
@@ -249,10 +280,10 @@ mod tests {
         let mut mb = Mailbox::new(10);
         
         // Push 1 normal
-        mb.push(Message { target_domain: "A".to_string(), payload: "N".to_string(), priority: 0 }).unwrap();
+        mb.push(Message { target_domain: "A".to_string(), payload: "N".to_string(), priority: 0, clock: 0 }).unwrap();
         // Push 4 high
-        for _ in 0..4 {
-            mb.push(Message { target_domain: "A".to_string(), payload: "H".to_string(), priority: 1 }).unwrap();
+        for i in 0..4 {
+            mb.push(Message { target_domain: "A".to_string(), payload: "H".to_string(), priority: 1, clock: i as u64 }).unwrap();
         }
 
         // Expected pop order: High, High, High, Normal, High

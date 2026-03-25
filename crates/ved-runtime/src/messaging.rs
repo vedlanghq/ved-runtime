@@ -6,6 +6,7 @@ pub struct Message {
     pub target_domain: String,
     pub payload: String,
     pub priority: u8, // 0 = Normal, 1 = High
+    pub clock: u64,   // Logical timestamp
 }
 
 pub struct Mailbox {

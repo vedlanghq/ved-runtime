@@ -1,0 +1,23 @@
+{
+  "cycle": 1,
+  "domains": {
+    "A": {
+      "state": {
+        "memory": {
+          "count": 1
+        }
+      },
+      "mailbox_high": [],
+      "mailbox_normal": []
+    },
+    "B": {
+      "state": {
+        "memory": {
+          "count": 0
+        }
+      },
+      "mailbox_high": [],
+      "mailbox_normal": []
+    }
+  }
+}

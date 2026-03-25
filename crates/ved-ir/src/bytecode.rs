@@ -14,6 +14,8 @@ pub enum OpCode {
     CmpEq { r1: u8, r2: u8, dest: u8 },
     CmpLt { r1: u8, r2: u8, dest: u8 },
     CmpGt { r1: u8, r2: u8, dest: u8 },
+    CmpGte { r1: u8, r2: u8, dest: u8 },
+    CmpLte { r1: u8, r2: u8, dest: u8 },
     JumpIfFalse { test_reg: u8, target_offset: usize },
     Jump { target_offset: usize },
     SendMsg { target_const_idx: usize, msg_const_idx: usize },

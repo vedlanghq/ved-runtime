@@ -148,7 +148,9 @@ impl<'a> FuncGen<'a> {
                     "==" => OpCode::CmpEq { r1, r2, dest },
                     "<" => OpCode::CmpLt { r1, r2, dest },
                     ">" => OpCode::CmpGt { r1, r2, dest },
-                    _ => unimplemented!("unsupported binary op"),
+                    ">=" => OpCode::CmpGte { r1, r2, dest },
+                    "<=" => OpCode::CmpLte { r1, r2, dest },
+                    _ => unimplemented!("unsupported binary op: {}", op),
                 };
                 self.emit(opcode);
                 dest

@@ -15,10 +15,6 @@ impl Parser {
         self.tokens.get(self.pos).unwrap_or(&Token::EOF)
     }
 
-    fn peek_next(&self) -> &Token {
-        self.tokens.get(self.pos + 1).unwrap_or(&Token::EOF)
-    }
-
     fn advance(&mut self) -> &Token {
         if self.pos < self.tokens.len() {
             self.pos += 1;
@@ -34,7 +30,7 @@ impl Parser {
         if self.check(&expected) {
             Ok(self.advance())
         } else {
-            Err(format!("Expected {:?}, found {:?}", expected, self.peek()))
+            Err(format!("Syntax Error: Expected {}, but found {}", expected, self.peek()))
         }
     }
 
@@ -49,7 +45,7 @@ impl Parser {
                 Token::System => {
                     statements.push(Statement::SystemDecl(self.parse_system()?));
                 }
-                _ => return Err(format!("Unexpected token at top level: {:?}", self.peek())),
+                _ => return Err(format!("Unexpected token at top level: {}", self.peek())),
             }
         }
 
@@ -60,7 +56,7 @@ impl Parser {
         self.consume(Token::Domain)?;
         let name = match self.advance() {
             Token::Identifier(id) => id.clone(),
-            other => return Err(format!("Expected identifier after 'domain', found {:?}", other)),
+            other => return Err(format!("Expected identifier after 'domain', found {}", other)),
         };
 
         self.consume(Token::LBrace)?;
@@ -80,7 +76,7 @@ impl Parser {
                 Token::Transition => {
                     transitions.push(self.parse_transition()?);
                 }
-                other => return Err(format!("Unexpected token in domain body: {:?}", other)),
+                other => return Err(format!("Unexpected token in domain body: {}", other)),
             }
         }
 
@@ -102,12 +98,12 @@ impl Parser {
         while !self.check(&Token::RBrace) && !self.check(&Token::EOF) {
             let name = match self.advance() {
                 Token::Identifier(id) => id.clone(),
-                other => return Err(format!("Expected state field name, found {:?}", other)),
+                other => return Err(format!("Expected state field name, found {}", other)),
             };
             self.consume(Token::Colon)?;
             let typ = match self.advance() {
                 Token::Identifier(id) => id.clone(),
-                other => return Err(format!("Expected type for field {}, found {:?}", name, other)),
+                other => return Err(format!("Expected type for field {}, found {}", name, other)),
             };
             fields.push(StateField { name, typ });
         }
@@ -120,12 +116,24 @@ impl Parser {
         self.consume(Token::Goal)?;
         let name = match self.advance() {
             Token::Identifier(id) => id.clone(),
-            other => return Err(format!("Expected goal name, found {:?}", other)),
+            other => return Err(format!("Expected goal name, found {}", other)),
         };
 
         self.consume(Token::LBrace)?;
         
-        self.consume(Token::Target)?;
+        // Support both "target" (original spec) and "predicate" (example usage)
+        if self.check(&Token::Target) {
+            self.consume(Token::Target)?;
+        } else if let Token::Identifier(ref id) = self.peek() {
+            if id == "predicate" {
+                self.advance();
+            } else {
+                return Err(format!("Expected 'target' or 'predicate' for goal, found {}", self.peek()));
+            }
+        } else {
+            return Err(format!("Expected 'target' or 'predicate' for goal, found {}", self.peek()));
+        }
+
         let target = self.parse_expression()?;
 
         // Optional Strategy Block...
@@ -133,7 +141,7 @@ impl Parser {
             self.consume(Token::Strategy)?;
             self.consume(Token::LBrace)?;
             while !self.check(&Token::RBrace) && !self.check(&Token::EOF) {
-                self.advance(); // consume strategy config blindly for now 
+                self.advance(); // consume strategy config blindly for now
             }
             self.consume(Token::RBrace)?;
         }
@@ -147,11 +155,13 @@ impl Parser {
         self.consume(Token::Transition)?;
         let name = match self.advance() {
             Token::Identifier(id) => id.clone(),
-            other => return Err(format!("Expected transition name, found {:?}", other)),
+            other => return Err(format!("Expected transition name, found {}", other)),
         };
 
         self.consume(Token::LBrace)?;
-        self.consume(Token::Slice)?;
+        if self.check(&Token::Slice) {
+            self.consume(Token::Slice)?;
+        }
         self.consume(Token::Step)?;
         self.consume(Token::LBrace)?;
         
@@ -198,14 +208,19 @@ impl Parser {
         match self.peek() {
             Token::Send => {
                 self.consume(Token::Send)?;
+                self.consume(Token::LParen)?;
                 let target = match self.advance() {
                     Token::Identifier(id) => id.clone(),
-                    _ => return Err("Expected target for send".to_string()),
+                    Token::StringLiteral(s) => s.clone(),
+                    other => return Err(format!("Expected target string or identifier for send, got {}", other)),
                 };
+                self.consume(Token::Comma)?;
                 let message = match self.advance() {
                     Token::Identifier(id) => id.clone(),
-                    _ => return Err("Expected message name for send".to_string()),
+                    Token::StringLiteral(s) => s.clone(),
+                    other => return Err(format!("Expected message string or identifier for send, got {}", other)),
                 };
+                self.consume(Token::RParen)?;
                 Ok(Expr::Send { target, message })
             }
             Token::If => {
@@ -232,13 +247,15 @@ impl Parser {
                 } else {
                     // Let's assume it's part of a binary op or just an indent
                     // Since it's a naive implementation, skip proper precedence parsing for now 
-                    if [Token::Plus, Token::Minus, Token::Asterisk, Token::Slash, Token::EqualEqual, Token::LessThan, Token::GreaterThan].contains(self.peek()) {
+                    if [Token::Plus, Token::Minus, Token::Asterisk, Token::Slash, Token::EqualEqual, Token::LessThan, Token::GreaterThan, Token::GTEqual, Token::LTEqual].contains(self.peek()) {
                         let op = match self.advance() {
                             Token::Plus => "+".to_string(),
                             Token::Minus => "-".to_string(),
                             Token::EqualEqual => "==".to_string(),
                             Token::LessThan => "<".to_string(),
                             Token::GreaterThan => ">".to_string(),
+                            Token::GTEqual => ">=".to_string(),
+                            Token::LTEqual => "<=".to_string(),
                             _ => return Err("Unsupported op".to_string()),
                         };
                         let right = Box::new(self.parse_expression()?);
@@ -259,16 +276,18 @@ impl Parser {
             Token::IntLiteral(v) => Expr::IntLiteral(*v),
             Token::StringLiteral(s) => Expr::StringLiteral(s.clone()),
             Token::Identifier(id) => Expr::Ident(id.clone()),
-            other => return Err(format!("Unexpected token in expression: {:?}", other)),
+            other => return Err(format!("Unexpected token in expression: {}", other)),
         };
 
-        if [Token::Plus, Token::Minus, Token::Asterisk, Token::Slash, Token::EqualEqual, Token::LessThan, Token::GreaterThan].contains(self.peek()) {
+        if [Token::Plus, Token::Minus, Token::Asterisk, Token::Slash, Token::EqualEqual, Token::LessThan, Token::GreaterThan, Token::GTEqual, Token::LTEqual].contains(self.peek()) {
             let op = match self.advance() {
                 Token::Plus => "+".to_string(),
                 Token::Minus => "-".to_string(),
                 Token::EqualEqual => "==".to_string(),
                 Token::LessThan => "<".to_string(),
                 Token::GreaterThan => ">".to_string(),
+                Token::GTEqual => ">=".to_string(),
+                Token::LTEqual => "<=".to_string(),
                 _ => unreachable!(),
             };
             let right = Box::new(self.parse_expression()?);
@@ -313,7 +332,7 @@ mod tests {
         let tokens = lex(input);
         let result = parse(tokens);
         
-        assert!(result.is_ok(), "Failed to parse AST: {:?}", result.err());
+        assert!(result.is_ok(), "Failed to parse AST: {}", result.err());
         
         let ast = result.unwrap();
         assert_eq!(ast.statements.len(), 1);

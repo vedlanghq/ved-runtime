@@ -76,6 +76,12 @@ impl Interpreter {
                 OpCode::CmpGt { r1, r2, dest } => {
                     self.registers[*dest as usize] = if self.registers[*r1 as usize] > self.registers[*r2 as usize] { 1 } else { 0 };
                 }
+                OpCode::CmpGte { r1, r2, dest } => {
+                    self.registers[*dest as usize] = if self.registers[*r1 as usize] >= self.registers[*r2 as usize] { 1 } else { 0 };
+                }
+                OpCode::CmpLte { r1, r2, dest } => {
+                    self.registers[*dest as usize] = if self.registers[*r1 as usize] <= self.registers[*r2 as usize] { 1 } else { 0 };
+                }
                 OpCode::JumpIfFalse { test_reg, target_offset } => {
                     if self.registers[*test_reg as usize] == 0 {
                         pc = *target_offset;
@@ -93,7 +99,7 @@ impl Interpreter {
                         Constant::String(s) => s.clone(),
                         _ => return Err("SendMsg payload must be a string".to_string()),
                     };
-                    outbox.push(Message { target_domain, payload, priority: 0 });
+                    outbox.push(Message { target_domain, payload, priority: 0, clock: 0 });
                 }
                 OpCode::HaltSlice => {
                     break;

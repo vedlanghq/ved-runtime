@@ -4,5 +4,5 @@ members = [
     "crates/ved-compiler",
     "crates/ved-runtime",
     "crates/ved-cli"
-]
+, "crates/ved-tracer"]
 resolver = "2"
