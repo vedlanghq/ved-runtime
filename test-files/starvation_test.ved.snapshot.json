@@ -1,0 +1,178 @@
+{
+  "cycle": 20,
+  "domains": {
+    "Consumer": {
+      "state": {
+        "memory": {
+          "high_processed": 14,
+          "low_processed": 4
+        }
+      },
+      "mailbox_high": [
+        {
+          "target_domain": "Consumer",
+          "payload": "task_high",
+          "priority": 1,
+          "clock": 62
+        },
+        {
+          "target_domain": "Consumer",
+          "payload": "task_high",
+          "priority": 1,
+          "clock": 66
+        },
+        {
+          "target_domain": "Consumer",
+          "payload": "task_high",
+          "priority": 1,
+          "clock": 70
+        },
+        {
+          "target_domain": "Consumer",
+          "payload": "task_high",
+          "priority": 1,
+          "clock": 74
+        },
+        {
+          "target_domain": "Consumer",
+          "payload": "task_high",
+          "priority": 1,
+          "clock": 78
+        }
+      ],
+      "mailbox_normal": [
+        {
+          "target_domain": "Consumer",
+          "payload": "task_low",
+          "priority": 0,
+          "clock": 23
+        },
+        {
+          "target_domain": "Consumer",
+          "payload": "task_low",
+          "priority": 0,
+          "clock": 27
+        },
+        {
+          "target_domain": "Consumer",
+          "payload": "task_low",
+          "priority": 0,
+          "clock": 31
+        },
+        {
+          "target_domain": "Consumer",
+          "payload": "task_low",
+          "priority": 0,
+          "clock": 35
+        },
+        {
+          "target_domain": "Consumer",
+          "payload": "task_low",
+          "priority": 0,
+          "clock": 39
+        },
+        {
+          "target_domain": "Consumer",
+          "payload": "task_low",
+          "priority": 0,
+          "clock": 43
+        },
+        {
+          "target_domain": "Consumer",
+          "payload": "task_low",
+          "priority": 0,
+          "clock": 47
+        },
+        {
+          "target_domain": "Consumer",
+          "payload": "task_low",
+          "priority": 0,
+          "clock": 51
+        },
+        {
+          "target_domain": "Consumer",
+          "payload": "task_low",
+          "priority": 0,
+          "clock": 55
+        },
+        {
+          "target_domain": "Consumer",
+          "payload": "task_low",
+          "priority": 0,
+          "clock": 59
+        },
+        {
+          "target_domain": "Consumer",
+          "payload": "task_low",
+          "priority": 0,
+          "clock": 63
+        },
+        {
+          "target_domain": "Consumer",
+          "payload": "task_low",
+          "priority": 0,
+          "clock": 67
+        },
+        {
+          "target_domain": "Consumer",
+          "payload": "task_low",
+          "priority": 0,
+          "clock": 71
+        },
+        {
+          "target_domain": "Consumer",
+          "payload": "task_low",
+          "priority": 0,
+          "clock": 75
+        },
+        {
+          "target_domain": "Consumer",
+          "payload": "task_low",
+          "priority": 0,
+          "clock": 79
+        }
+      ]
+    },
+    "Bootstrapper": {
+      "state": {
+        "memory": {
+          "started": 0
+        }
+      },
+      "mailbox_high": [],
+      "mailbox_normal": []
+    },
+    "HighProducer": {
+      "state": {
+        "memory": {
+          "count": 19
+        }
+      },
+      "mailbox_high": [],
+      "mailbox_normal": [
+        {
+          "target_domain": "HighProducer",
+          "payload": "produce",
+          "priority": 0,
+          "clock": 79
+        }
+      ]
+    },
+    "LowProducer": {
+      "state": {
+        "memory": {
+          "count": 19
+        }
+      },
+      "mailbox_high": [],
+      "mailbox_normal": [
+        {
+          "target_domain": "LowProducer",
+          "payload": "produce",
+          "priority": 0,
+          "clock": 80
+        }
+      ]
+    }
+  }
+}

@@ -120,6 +120,9 @@ impl SemanticValidator {
             Expr::Send { target: _, message: _ } => {
                 // Ensure target domain exists? Could be checked here eventually.
             }
+            Expr::SendHigh { target: _, message: _ } => {
+                // High priority send
+            }
             Expr::IntLiteral(_) | Expr::StringLiteral(_) => {
                 // Literals are inherently valid.
             }

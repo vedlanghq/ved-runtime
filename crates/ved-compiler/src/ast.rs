@@ -60,6 +60,10 @@ pub enum Expr {
         target: String,
         message: String,
     },
+    SendHigh {
+        target: String,
+        message: String,
+    },
     If {
         condition: Box<Expr>,
         consequence: Vec<Expr>,

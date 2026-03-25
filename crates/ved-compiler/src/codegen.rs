@@ -179,6 +179,12 @@ impl<'a> FuncGen<'a> {
                 self.emit(OpCode::SendMsg { target_const_idx, msg_const_idx });
                 self.alloc_reg() // Return dummy register
             }
+            Expr::SendHigh { target, message } => {
+                let target_const_idx = self.add_constant(Constant::String(target.clone()));
+                let msg_const_idx = self.add_constant(Constant::String(message.clone()));
+                self.emit(OpCode::SendHighMsg { target_const_idx, msg_const_idx });
+                self.alloc_reg() // Return dummy register
+            }
         }
     }
 }

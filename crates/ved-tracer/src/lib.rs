@@ -9,7 +9,7 @@ pub struct TraceEvent {
 }
 
 pub struct Tracer {
-    events: Vec<TraceEvent>,
+    pub events: Vec<TraceEvent>,
 }
 
 impl Tracer {

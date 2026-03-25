@@ -19,6 +19,7 @@ pub enum OpCode {
     JumpIfFalse { test_reg: u8, target_offset: usize },
     Jump { target_offset: usize },
     SendMsg { target_const_idx: usize, msg_const_idx: usize },
+    SendHighMsg { target_const_idx: usize, msg_const_idx: usize },
     HaltSlice,
 }
 

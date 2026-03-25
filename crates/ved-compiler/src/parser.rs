@@ -223,6 +223,23 @@ impl Parser {
                 self.consume(Token::RParen)?;
                 Ok(Expr::Send { target, message })
             }
+            Token::SendHigh => {
+                self.consume(Token::SendHigh)?;
+                self.consume(Token::LParen)?;
+                let target = match self.advance() {
+                    Token::Identifier(id) => id.clone(),
+                    Token::StringLiteral(s) => s.clone(),
+                    other => return Err(format!("Expected target string or identifier for send_high, got {}", other)),
+                };
+                self.consume(Token::Comma)?;
+                let message = match self.advance() {
+                    Token::Identifier(id) => id.clone(),
+                    Token::StringLiteral(s) => s.clone(),
+                    other => return Err(format!("Expected message string or identifier for send_high, got {}", other)),
+                };
+                self.consume(Token::RParen)?;
+                Ok(Expr::SendHigh { target, message })
+            }
             Token::If => {
                 self.consume(Token::If)?;
                 let condition = Box::new(self.parse_expression()?);
@@ -332,7 +349,7 @@ mod tests {
         let tokens = lex(input);
         let result = parse(tokens);
         
-        assert!(result.is_ok(), "Failed to parse AST: {}", result.err());
+        assert!(result.is_ok(), "Failed to parse AST: {}", result.err().unwrap_or_default());
         
         let ast = result.unwrap();
         assert_eq!(ast.statements.len(), 1);

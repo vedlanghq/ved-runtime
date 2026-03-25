@@ -101,6 +101,17 @@ impl Interpreter {
                     };
                     outbox.push(Message { target_domain, payload, priority: 0, clock: 0 });
                 }
+                OpCode::SendHighMsg { target_const_idx, msg_const_idx } => {
+                    let target_domain = match &consts[*target_const_idx] {
+                        Constant::String(s) => s.clone(),
+                        _ => return Err("SendHighMsg target must be a string".to_string()),
+                    };
+                    let payload = match &consts[*msg_const_idx] {
+                        Constant::String(s) => s.clone(),
+                        _ => return Err("SendHighMsg payload must be a string".to_string()),
+                    };
+                    outbox.push(Message { target_domain, payload, priority: 1, clock: 0 });
+                }
                 OpCode::HaltSlice => {
                     break;
                 }

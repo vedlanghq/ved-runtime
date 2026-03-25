@@ -1,0 +1,1154 @@
+[
+  {
+    "cycle": 1,
+    "domain": "Bootstrapper",
+    "action": "PROCESS_MESSAGE",
+    "details": "run"
+  },
+  {
+    "cycle": 1,
+    "domain": "Bootstrapper",
+    "action": "STATE_MUTATED",
+    "details": "\"started\": 0"
+  },
+  {
+    "cycle": 1,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: HighProducer"
+  },
+  {
+    "cycle": 1,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: LowProducer"
+  },
+  {
+    "cycle": 2,
+    "domain": "HighProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 2,
+    "domain": "HighProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 1"
+  },
+  {
+    "cycle": 2,
+    "domain": "LowProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 2,
+    "domain": "LowProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 1"
+  },
+  {
+    "cycle": 2,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_high, Target: Consumer"
+  },
+  {
+    "cycle": 2,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: HighProducer"
+  },
+  {
+    "cycle": 2,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_low, Target: Consumer"
+  },
+  {
+    "cycle": 2,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: LowProducer"
+  },
+  {
+    "cycle": 3,
+    "domain": "Consumer",
+    "action": "PROCESS_MESSAGE",
+    "details": "task_high"
+  },
+  {
+    "cycle": 3,
+    "domain": "Consumer",
+    "action": "STATE_MUTATED",
+    "details": "\"high_processed\": 1, \"low_processed\": 0"
+  },
+  {
+    "cycle": 3,
+    "domain": "HighProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 3,
+    "domain": "HighProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 2"
+  },
+  {
+    "cycle": 3,
+    "domain": "LowProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 3,
+    "domain": "LowProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 2"
+  },
+  {
+    "cycle": 3,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_high, Target: Consumer"
+  },
+  {
+    "cycle": 3,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: HighProducer"
+  },
+  {
+    "cycle": 3,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_low, Target: Consumer"
+  },
+  {
+    "cycle": 3,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: LowProducer"
+  },
+  {
+    "cycle": 4,
+    "domain": "Consumer",
+    "action": "PROCESS_MESSAGE",
+    "details": "task_high"
+  },
+  {
+    "cycle": 4,
+    "domain": "Consumer",
+    "action": "STATE_MUTATED",
+    "details": "\"high_processed\": 2, \"low_processed\": 0"
+  },
+  {
+    "cycle": 4,
+    "domain": "HighProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 4,
+    "domain": "HighProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 3"
+  },
+  {
+    "cycle": 4,
+    "domain": "LowProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 4,
+    "domain": "LowProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 3"
+  },
+  {
+    "cycle": 4,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_high, Target: Consumer"
+  },
+  {
+    "cycle": 4,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: HighProducer"
+  },
+  {
+    "cycle": 4,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_low, Target: Consumer"
+  },
+  {
+    "cycle": 4,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: LowProducer"
+  },
+  {
+    "cycle": 5,
+    "domain": "Consumer",
+    "action": "PROCESS_MESSAGE",
+    "details": "task_high"
+  },
+  {
+    "cycle": 5,
+    "domain": "Consumer",
+    "action": "STATE_MUTATED",
+    "details": "\"high_processed\": 3, \"low_processed\": 0"
+  },
+  {
+    "cycle": 5,
+    "domain": "HighProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 5,
+    "domain": "HighProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 4"
+  },
+  {
+    "cycle": 5,
+    "domain": "LowProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 5,
+    "domain": "LowProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 4"
+  },
+  {
+    "cycle": 5,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_high, Target: Consumer"
+  },
+  {
+    "cycle": 5,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: HighProducer"
+  },
+  {
+    "cycle": 5,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_low, Target: Consumer"
+  },
+  {
+    "cycle": 5,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: LowProducer"
+  },
+  {
+    "cycle": 6,
+    "domain": "Consumer",
+    "action": "PROCESS_MESSAGE",
+    "details": "task_low"
+  },
+  {
+    "cycle": 6,
+    "domain": "Consumer",
+    "action": "STATE_MUTATED",
+    "details": "\"high_processed\": 3, \"low_processed\": 1"
+  },
+  {
+    "cycle": 6,
+    "domain": "HighProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 6,
+    "domain": "HighProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 5"
+  },
+  {
+    "cycle": 6,
+    "domain": "LowProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 6,
+    "domain": "LowProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 5"
+  },
+  {
+    "cycle": 6,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_high, Target: Consumer"
+  },
+  {
+    "cycle": 6,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: HighProducer"
+  },
+  {
+    "cycle": 6,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_low, Target: Consumer"
+  },
+  {
+    "cycle": 6,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: LowProducer"
+  },
+  {
+    "cycle": 7,
+    "domain": "Consumer",
+    "action": "PROCESS_MESSAGE",
+    "details": "task_high"
+  },
+  {
+    "cycle": 7,
+    "domain": "Consumer",
+    "action": "STATE_MUTATED",
+    "details": "\"high_processed\": 4, \"low_processed\": 1"
+  },
+  {
+    "cycle": 7,
+    "domain": "HighProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 7,
+    "domain": "HighProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 6"
+  },
+  {
+    "cycle": 7,
+    "domain": "LowProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 7,
+    "domain": "LowProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 6"
+  },
+  {
+    "cycle": 7,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_high, Target: Consumer"
+  },
+  {
+    "cycle": 7,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: HighProducer"
+  },
+  {
+    "cycle": 7,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_low, Target: Consumer"
+  },
+  {
+    "cycle": 7,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: LowProducer"
+  },
+  {
+    "cycle": 8,
+    "domain": "Consumer",
+    "action": "PROCESS_MESSAGE",
+    "details": "task_high"
+  },
+  {
+    "cycle": 8,
+    "domain": "Consumer",
+    "action": "STATE_MUTATED",
+    "details": "\"high_processed\": 5, \"low_processed\": 1"
+  },
+  {
+    "cycle": 8,
+    "domain": "HighProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 8,
+    "domain": "HighProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 7"
+  },
+  {
+    "cycle": 8,
+    "domain": "LowProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 8,
+    "domain": "LowProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 7"
+  },
+  {
+    "cycle": 8,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_high, Target: Consumer"
+  },
+  {
+    "cycle": 8,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: HighProducer"
+  },
+  {
+    "cycle": 8,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_low, Target: Consumer"
+  },
+  {
+    "cycle": 8,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: LowProducer"
+  },
+  {
+    "cycle": 9,
+    "domain": "Consumer",
+    "action": "PROCESS_MESSAGE",
+    "details": "task_high"
+  },
+  {
+    "cycle": 9,
+    "domain": "Consumer",
+    "action": "STATE_MUTATED",
+    "details": "\"high_processed\": 6, \"low_processed\": 1"
+  },
+  {
+    "cycle": 9,
+    "domain": "HighProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 9,
+    "domain": "HighProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 8"
+  },
+  {
+    "cycle": 9,
+    "domain": "LowProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 9,
+    "domain": "LowProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 8"
+  },
+  {
+    "cycle": 9,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_high, Target: Consumer"
+  },
+  {
+    "cycle": 9,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: HighProducer"
+  },
+  {
+    "cycle": 9,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_low, Target: Consumer"
+  },
+  {
+    "cycle": 9,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: LowProducer"
+  },
+  {
+    "cycle": 10,
+    "domain": "Consumer",
+    "action": "PROCESS_MESSAGE",
+    "details": "task_low"
+  },
+  {
+    "cycle": 10,
+    "domain": "Consumer",
+    "action": "STATE_MUTATED",
+    "details": "\"high_processed\": 6, \"low_processed\": 2"
+  },
+  {
+    "cycle": 10,
+    "domain": "HighProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 10,
+    "domain": "HighProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 9"
+  },
+  {
+    "cycle": 10,
+    "domain": "LowProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 10,
+    "domain": "LowProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 9"
+  },
+  {
+    "cycle": 10,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_high, Target: Consumer"
+  },
+  {
+    "cycle": 10,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: HighProducer"
+  },
+  {
+    "cycle": 10,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_low, Target: Consumer"
+  },
+  {
+    "cycle": 10,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: LowProducer"
+  },
+  {
+    "cycle": 11,
+    "domain": "Consumer",
+    "action": "PROCESS_MESSAGE",
+    "details": "task_high"
+  },
+  {
+    "cycle": 11,
+    "domain": "Consumer",
+    "action": "STATE_MUTATED",
+    "details": "\"high_processed\": 7, \"low_processed\": 2"
+  },
+  {
+    "cycle": 11,
+    "domain": "HighProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 11,
+    "domain": "HighProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 10"
+  },
+  {
+    "cycle": 11,
+    "domain": "LowProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 11,
+    "domain": "LowProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 10"
+  },
+  {
+    "cycle": 11,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_high, Target: Consumer"
+  },
+  {
+    "cycle": 11,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: HighProducer"
+  },
+  {
+    "cycle": 11,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_low, Target: Consumer"
+  },
+  {
+    "cycle": 11,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: LowProducer"
+  },
+  {
+    "cycle": 12,
+    "domain": "Consumer",
+    "action": "PROCESS_MESSAGE",
+    "details": "task_high"
+  },
+  {
+    "cycle": 12,
+    "domain": "Consumer",
+    "action": "STATE_MUTATED",
+    "details": "\"high_processed\": 8, \"low_processed\": 2"
+  },
+  {
+    "cycle": 12,
+    "domain": "HighProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 12,
+    "domain": "HighProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 11"
+  },
+  {
+    "cycle": 12,
+    "domain": "LowProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 12,
+    "domain": "LowProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 11"
+  },
+  {
+    "cycle": 12,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_high, Target: Consumer"
+  },
+  {
+    "cycle": 12,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: HighProducer"
+  },
+  {
+    "cycle": 12,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_low, Target: Consumer"
+  },
+  {
+    "cycle": 12,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: LowProducer"
+  },
+  {
+    "cycle": 13,
+    "domain": "Consumer",
+    "action": "PROCESS_MESSAGE",
+    "details": "task_high"
+  },
+  {
+    "cycle": 13,
+    "domain": "Consumer",
+    "action": "STATE_MUTATED",
+    "details": "\"high_processed\": 9, \"low_processed\": 2"
+  },
+  {
+    "cycle": 13,
+    "domain": "HighProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 13,
+    "domain": "HighProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 12"
+  },
+  {
+    "cycle": 13,
+    "domain": "LowProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 13,
+    "domain": "LowProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 12"
+  },
+  {
+    "cycle": 13,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_high, Target: Consumer"
+  },
+  {
+    "cycle": 13,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: HighProducer"
+  },
+  {
+    "cycle": 13,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_low, Target: Consumer"
+  },
+  {
+    "cycle": 13,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: LowProducer"
+  },
+  {
+    "cycle": 14,
+    "domain": "Consumer",
+    "action": "PROCESS_MESSAGE",
+    "details": "task_low"
+  },
+  {
+    "cycle": 14,
+    "domain": "Consumer",
+    "action": "STATE_MUTATED",
+    "details": "\"high_processed\": 9, \"low_processed\": 3"
+  },
+  {
+    "cycle": 14,
+    "domain": "HighProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 14,
+    "domain": "HighProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 13"
+  },
+  {
+    "cycle": 14,
+    "domain": "LowProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 14,
+    "domain": "LowProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 13"
+  },
+  {
+    "cycle": 14,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_high, Target: Consumer"
+  },
+  {
+    "cycle": 14,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: HighProducer"
+  },
+  {
+    "cycle": 14,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_low, Target: Consumer"
+  },
+  {
+    "cycle": 14,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: LowProducer"
+  },
+  {
+    "cycle": 15,
+    "domain": "Consumer",
+    "action": "PROCESS_MESSAGE",
+    "details": "task_high"
+  },
+  {
+    "cycle": 15,
+    "domain": "Consumer",
+    "action": "STATE_MUTATED",
+    "details": "\"high_processed\": 10, \"low_processed\": 3"
+  },
+  {
+    "cycle": 15,
+    "domain": "HighProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 15,
+    "domain": "HighProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 14"
+  },
+  {
+    "cycle": 15,
+    "domain": "LowProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 15,
+    "domain": "LowProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 14"
+  },
+  {
+    "cycle": 15,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_high, Target: Consumer"
+  },
+  {
+    "cycle": 15,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: HighProducer"
+  },
+  {
+    "cycle": 15,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_low, Target: Consumer"
+  },
+  {
+    "cycle": 15,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: LowProducer"
+  },
+  {
+    "cycle": 16,
+    "domain": "Consumer",
+    "action": "PROCESS_MESSAGE",
+    "details": "task_high"
+  },
+  {
+    "cycle": 16,
+    "domain": "Consumer",
+    "action": "STATE_MUTATED",
+    "details": "\"high_processed\": 11, \"low_processed\": 3"
+  },
+  {
+    "cycle": 16,
+    "domain": "HighProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 16,
+    "domain": "HighProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 15"
+  },
+  {
+    "cycle": 16,
+    "domain": "LowProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 16,
+    "domain": "LowProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 15"
+  },
+  {
+    "cycle": 16,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_high, Target: Consumer"
+  },
+  {
+    "cycle": 16,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: HighProducer"
+  },
+  {
+    "cycle": 16,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_low, Target: Consumer"
+  },
+  {
+    "cycle": 16,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: LowProducer"
+  },
+  {
+    "cycle": 17,
+    "domain": "Consumer",
+    "action": "PROCESS_MESSAGE",
+    "details": "task_high"
+  },
+  {
+    "cycle": 17,
+    "domain": "Consumer",
+    "action": "STATE_MUTATED",
+    "details": "\"high_processed\": 12, \"low_processed\": 3"
+  },
+  {
+    "cycle": 17,
+    "domain": "HighProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 17,
+    "domain": "HighProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 16"
+  },
+  {
+    "cycle": 17,
+    "domain": "LowProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 17,
+    "domain": "LowProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 16"
+  },
+  {
+    "cycle": 17,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_high, Target: Consumer"
+  },
+  {
+    "cycle": 17,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: HighProducer"
+  },
+  {
+    "cycle": 17,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_low, Target: Consumer"
+  },
+  {
+    "cycle": 17,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: LowProducer"
+  },
+  {
+    "cycle": 18,
+    "domain": "Consumer",
+    "action": "PROCESS_MESSAGE",
+    "details": "task_low"
+  },
+  {
+    "cycle": 18,
+    "domain": "Consumer",
+    "action": "STATE_MUTATED",
+    "details": "\"high_processed\": 12, \"low_processed\": 4"
+  },
+  {
+    "cycle": 18,
+    "domain": "HighProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 18,
+    "domain": "HighProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 17"
+  },
+  {
+    "cycle": 18,
+    "domain": "LowProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 18,
+    "domain": "LowProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 17"
+  },
+  {
+    "cycle": 18,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_high, Target: Consumer"
+  },
+  {
+    "cycle": 18,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: HighProducer"
+  },
+  {
+    "cycle": 18,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_low, Target: Consumer"
+  },
+  {
+    "cycle": 18,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: LowProducer"
+  },
+  {
+    "cycle": 19,
+    "domain": "Consumer",
+    "action": "PROCESS_MESSAGE",
+    "details": "task_high"
+  },
+  {
+    "cycle": 19,
+    "domain": "Consumer",
+    "action": "STATE_MUTATED",
+    "details": "\"high_processed\": 13, \"low_processed\": 4"
+  },
+  {
+    "cycle": 19,
+    "domain": "HighProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 19,
+    "domain": "HighProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 18"
+  },
+  {
+    "cycle": 19,
+    "domain": "LowProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 19,
+    "domain": "LowProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 18"
+  },
+  {
+    "cycle": 19,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_high, Target: Consumer"
+  },
+  {
+    "cycle": 19,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: HighProducer"
+  },
+  {
+    "cycle": 19,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_low, Target: Consumer"
+  },
+  {
+    "cycle": 19,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: LowProducer"
+  },
+  {
+    "cycle": 20,
+    "domain": "Consumer",
+    "action": "PROCESS_MESSAGE",
+    "details": "task_high"
+  },
+  {
+    "cycle": 20,
+    "domain": "Consumer",
+    "action": "STATE_MUTATED",
+    "details": "\"high_processed\": 14, \"low_processed\": 4"
+  },
+  {
+    "cycle": 20,
+    "domain": "HighProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 20,
+    "domain": "HighProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 19"
+  },
+  {
+    "cycle": 20,
+    "domain": "LowProducer",
+    "action": "PROCESS_MESSAGE",
+    "details": "produce"
+  },
+  {
+    "cycle": 20,
+    "domain": "LowProducer",
+    "action": "STATE_MUTATED",
+    "details": "\"count\": 19"
+  },
+  {
+    "cycle": 20,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_high, Target: Consumer"
+  },
+  {
+    "cycle": 20,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: HighProducer"
+  },
+  {
+    "cycle": 20,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: task_low, Target: Consumer"
+  },
+  {
+    "cycle": 20,
+    "domain": "SYSTEM",
+    "action": "ROUTING_MESSAGE",
+    "details": "Payload: produce, Target: LowProducer"
+  }
+]

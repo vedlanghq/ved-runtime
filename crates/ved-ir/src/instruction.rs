@@ -9,5 +9,6 @@ pub enum Instruction {
     JumpIf(usize),
     Jump(usize),
     SendMsg(String),
+    SendHighMsg(String),
     HaltSlice,
 }

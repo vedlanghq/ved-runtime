@@ -1,0 +1,30 @@
+{
+  "cycle": 50,
+  "domains": {
+    "StormNodeB": {
+      "state": {
+        "memory": {
+          "count": 25
+        }
+      },
+      "mailbox_high": [],
+      "mailbox_normal": []
+    },
+    "StormNodeA": {
+      "state": {
+        "memory": {
+          "count": 25
+        }
+      },
+      "mailbox_high": [],
+      "mailbox_normal": [
+        {
+          "target_domain": "StormNodeA",
+          "payload": "ping",
+          "priority": 0,
+          "clock": 150
+        }
+      ]
+    }
+  }
+}
