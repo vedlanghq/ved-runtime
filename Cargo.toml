@@ -1,8 +1,7 @@
 [workspace]
 members = [
     "crates/ved-ir",
-    
     "crates/ved-runtime",
-    "crates/ved-cli"
-, "crates/ved-tracer"]
+    "crates/ved-tracer"
+]
 resolver = "2"
