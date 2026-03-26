@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "crates/ved-ir",
-    "crates/ved-compiler",
+    
     "crates/ved-runtime",
     "crates/ved-cli"
 , "crates/ved-tracer"]

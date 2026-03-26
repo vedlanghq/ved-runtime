@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ved-compiler = { path = "../ved-compiler" }
+ved-compiler = { path = "../../../ved-compiler" }
 ved-runtime = { path = "../ved-runtime" }
 ved-tracer = { version = "0.1.0", path = "../ved-tracer" }
 

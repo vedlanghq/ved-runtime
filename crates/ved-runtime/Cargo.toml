@@ -11,4 +11,4 @@ ved-ir = { path = "../ved-ir" }
 ved-tracer = { version = "0.1.0", path = "../ved-tracer" }
 
 [dev-dependencies]
-ved-compiler = { path = "../ved-compiler" }
+ved-compiler = { path = "../../../ved-compiler" }
