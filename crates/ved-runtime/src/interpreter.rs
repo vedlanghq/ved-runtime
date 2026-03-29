@@ -82,6 +82,36 @@ impl Interpreter {
                 OpCode::CmpLte { r1, r2, dest } => {
                     self.registers[*dest as usize] = if self.registers[*r1 as usize] <= self.registers[*r2 as usize] { 1 } else { 0 };
                 }
+                OpCode::MulInt { r1, r2, dest } => {
+                    self.registers[*dest as usize] = self.registers[*r1 as usize] * self.registers[*r2 as usize];
+                }
+                OpCode::DivInt { r1, r2, dest } => {
+                    let divisor = self.registers[*r2 as usize];
+                    if divisor == 0 {
+                        return Err("Deterministic fault: Division by zero".to_string());
+                    }
+                    self.registers[*dest as usize] = self.registers[*r1 as usize] / divisor;
+                }
+                OpCode::AndBool { r1, r2, dest } => {
+                    let a = self.registers[*r1 as usize] != 0;
+                    let b = self.registers[*r2 as usize] != 0;
+                    self.registers[*dest as usize] = if a && b { 1 } else { 0 };
+                }
+                OpCode::OrBool { r1, r2, dest } => {
+                    let a = self.registers[*r1 as usize] != 0;
+                    let b = self.registers[*r2 as usize] != 0;
+                    self.registers[*dest as usize] = if a || b { 1 } else { 0 };
+                }
+                OpCode::NotBool { r1, dest } => {
+                    let a = self.registers[*r1 as usize] != 0;
+                    self.registers[*dest as usize] = if !a { 1 } else { 0 };
+                }
+                OpCode::ListLen { .. } | OpCode::ListGet { .. } | OpCode::ListAppend { .. } => {
+                    return Err("Deterministic fault: List commands unsupported in Phase 1 runtime".to_string());
+                }
+                OpCode::EmitEffect { .. } | OpCode::CheckGoal { .. } => {
+                    return Err("Deterministic fault: Effects and Advanced Goal checking via bytecode not yet wired".to_string());
+                }
                 OpCode::JumpIfFalse { test_reg, target_offset } => {
                     if self.registers[*test_reg as usize] == 0 {
                         pc = *target_offset;
