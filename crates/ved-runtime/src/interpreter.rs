@@ -7,6 +7,12 @@ pub struct Interpreter {
     pub registers: [i64; 256],
 }
 
+pub enum SliceResult {
+    Completed(Vec<Message>),
+    Suspended { pc: usize, outbox: Vec<Message> },
+    Fault(String),
+}
+
 impl Interpreter {
     pub fn new(schema: &[String]) -> Self {
         Self {
@@ -23,16 +29,15 @@ impl Interpreter {
     }
 
     /// Executes a deterministic slice of bytecode, returning messages to route.
-    pub fn run_slice(&mut self, trans: &TransitionBytecode, field_names: &[String], gas_limit: usize) -> Result<Vec<Message>, String> {
+    pub fn run_slice(&mut self, trans: &TransitionBytecode, field_names: &[String], gas_limit: usize, start_pc: usize, mut outbox: Vec<Message>) -> SliceResult {
         let mut gas_used = 0;
-        let mut pc = 0;
+        let mut pc = start_pc;
         let code = &trans.instructions;
         let consts = &trans.constants;
-        let mut outbox = Vec::new();
 
         while pc < code.len() {
             if gas_used >= gas_limit {
-                return Err(format!("Slice exhausted gas boundary (Max {} instructions)", gas_limit));
+                return SliceResult::Suspended { pc, outbox };
             }
             gas_used += 1;
             let inst = &code[pc];
@@ -58,7 +63,7 @@ impl Interpreter {
                     let key = &field_names[*field_idx];
                     let val = self.registers[*src_reg as usize];
                     if let Err(e) = self.state.set(key, val) {
-                        return Err(e);
+                        return SliceResult::Fault(e);
                     }
                 }
                 OpCode::AddInt { r1, r2, dest } => {
@@ -88,7 +93,7 @@ impl Interpreter {
                 OpCode::DivInt { r1, r2, dest } => {
                     let divisor = self.registers[*r2 as usize];
                     if divisor == 0 {
-                        return Err("Deterministic fault: Division by zero".to_string());
+                        return SliceResult::Fault("Deterministic fault: Division by zero".to_string());
                     }
                     self.registers[*dest as usize] = self.registers[*r1 as usize] / divisor;
                 }
@@ -107,10 +112,10 @@ impl Interpreter {
                     self.registers[*dest as usize] = if !a { 1 } else { 0 };
                 }
                 OpCode::ListLen { .. } | OpCode::ListGet { .. } | OpCode::ListAppend { .. } => {
-                    return Err("Deterministic fault: List commands unsupported in Phase 1 runtime".to_string());
+                    return SliceResult::Fault("Deterministic fault: List commands unsupported in Phase 1 runtime".to_string());
                 }
                 OpCode::EmitEffect { .. } | OpCode::CheckGoal { .. } => {
-                    return Err("Deterministic fault: Effects and Advanced Goal checking via bytecode not yet wired".to_string());
+                    return SliceResult::Fault("Deterministic fault: Effects and Advanced Goal checking via bytecode not yet wired".to_string());
                 }
                 OpCode::JumpIfFalse { test_reg, target_offset } => {
                     if self.registers[*test_reg as usize] == 0 {
@@ -123,22 +128,22 @@ impl Interpreter {
                 OpCode::SendMsg { target_const_idx, msg_const_idx } => {
                     let target_domain = match &consts[*target_const_idx] {
                         Constant::String(s) => s.clone(),
-                        _ => return Err("SendMsg target must be a string".to_string()),
+                        _ => return SliceResult::Fault("SendMsg target must be a string".to_string()),
                     };
                     let payload = match &consts[*msg_const_idx] {
                         Constant::String(s) => s.clone(),
-                        _ => return Err("SendMsg payload must be a string".to_string()),
+                        _ => return SliceResult::Fault("SendMsg payload must be a string".to_string()),
                     };
                     outbox.push(Message { target_domain, payload, priority: 0, clock: 0 });
                 }
                 OpCode::SendHighMsg { target_const_idx, msg_const_idx } => {
                     let target_domain = match &consts[*target_const_idx] {
                         Constant::String(s) => s.clone(),
-                        _ => return Err("SendHighMsg target must be a string".to_string()),
+                        _ => return SliceResult::Fault("SendHighMsg target must be a string".to_string()),
                     };
                     let payload = match &consts[*msg_const_idx] {
                         Constant::String(s) => s.clone(),
-                        _ => return Err("SendHighMsg payload must be a string".to_string()),
+                        _ => return SliceResult::Fault("SendHighMsg payload must be a string".to_string()),
                     };
                     outbox.push(Message { target_domain, payload, priority: 1, clock: 0 });
                 }
@@ -148,7 +153,7 @@ impl Interpreter {
             }
         }
 
-        Ok(outbox)
+        SliceResult::Completed(outbox)
     }
 }
 
@@ -174,8 +179,8 @@ mod tests {
             ],
         };
 
-        let res = interp.run_slice(&trans, &fields, 1000);
-        assert!(res.is_ok());
+        let res = interp.run_slice(&trans, &fields, 1000, 0, vec![]);
+        assert!(matches!(res, SliceResult::Completed(_)));
         assert_eq!(interp.state.get("counter"), Some(11));
     }
 }

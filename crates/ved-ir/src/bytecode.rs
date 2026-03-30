@@ -60,6 +60,7 @@ pub struct TransitionBytecode {
 #[derive(Debug, Clone)]
 pub struct GoalBytecode {
     pub name: String,
+    pub recovery_transitions: Vec<String>,
     pub constants: Vec<Constant>,
     pub instructions: Vec<OpCode>,
 }
@@ -227,6 +228,11 @@ impl BinaryPacker {
             for g in &dom.goals {
                 Self::write_string(&g.name, &mut buf);
                 Self::write_constants(&g.constants, &mut buf);
+                
+                buf.extend_from_slice(&(g.recovery_transitions.len() as u16).to_le_bytes());
+                for rt in &g.recovery_transitions {
+                    Self::write_string(rt, &mut buf);
+                }
                 
                 let mut instr_buf = Vec::new();
                 for instr in &g.instructions {

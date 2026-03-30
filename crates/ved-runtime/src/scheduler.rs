@@ -1,5 +1,5 @@
-use crate::domain_registry::DomainRegistry;
-use crate::interpreter::Interpreter;
+use crate::domain_registry::{DomainRegistry, SuspendedContext};
+use crate::interpreter::{Interpreter, SliceResult};
 use crate::persistence::SnapshotManager;
 use crate::goal_engine::GoalEngine;
 use crate::rng::DeterministicRng;
@@ -51,10 +51,23 @@ impl Scheduler {
 
             let mut outbox_all = Vec::new();
 
-            // Deterministic sort is absolutely critical here to prevent HashMap iteration randomness
-            let mut domains_with_weights: Vec<(String, u8)> = self.registry.instances.iter().map(|(k, v)| (k.clone(), v.schedule_weight)).collect();
-        domains_with_weights.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
-        let domain_names_sorted: Vec<String> = domains_with_weights.into_iter().map(|(k, _)| k).collect();
+            let mut domains_with_weights: Vec<(String, u64)> = self.registry.instances.iter()
+                .filter(|(_, v)| !v.is_quiescent)
+                .map(|(k, v)| {
+                // Heuristic dynamic urgency mapping
+                let high_bonus = if !v.mailbox.high.is_empty() { 1000 } else { 0 };
+                
+                let oldest_ticket = v.mailbox.high.front().map(|m| m.clock)
+                                        .unwrap_or_else(|| v.mailbox.normal.front().map(|m| m.clock).unwrap_or(cycle as u64));
+                let aging_bonus = (cycle as u64).saturating_sub(oldest_ticket) * 10;
+                
+                let urgency = (v.schedule_weight as u64 * 100) + high_bonus + aging_bonus;
+                
+                (k.clone(), urgency)
+            }).collect();
+            // Deterministic sort: highest urgency first, fallback to lexicographical ID comparison
+            domains_with_weights.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
+            let domain_names_sorted: Vec<String> = domains_with_weights.into_iter().map(|(k, _)| k).collect();
             
 
             for name in domain_names_sorted {
@@ -63,13 +76,34 @@ impl Scheduler {
                 // 1. Evaluate Goals
                 // If a goal evaluates to true, we don't automatically stop the runtime, 
                 // but we might log it or trigger a transition. For v0.1: just log if semantic goal is met.
+                let mut goals_failed = false;
                 for goal in &instance.bytecode.goals {
                     match GoalEngine::evaluate(goal, &instance.state, &instance.schema, slice_gas_limit) {
                         Ok(true) => {
                             self.tracer.record(cycle, &name, "GOAL_MET", &goal.name);
                             trace.push(format!("[Scheduler Cycle {}] Domain '{}' achieved GOAL: '{}'", cycle, name, goal.name));
                         }
-                        Ok(false) => { /* Goal not yet met */ }
+                        Ok(false) => { 
+                            goals_failed = true;
+                            self.tracer.record(cycle, &name, "GOAL_FAILED", &goal.name);
+                            trace.push(format!("[Scheduler Cycle {}] Domain '{}' GOAL FAILED: '{}' -> Scheduling recovery strategies", cycle, name, goal.name));
+                            for strat in &goal.recovery_transitions {
+                                // Idempotency Check: Do not enqueue if it is already queued.
+                                let already_queued = instance.mailbox.high.iter().any(|m| &m.payload == strat) ||
+                                                     instance.mailbox.normal.iter().any(|m| &m.payload == strat);
+                                
+                                if !already_queued {
+                                    active = true;
+                                    let recovery_msg = crate::messaging::Message {
+                                        target_domain: name.clone(),
+                                        payload: strat.clone(),
+                                        priority: 1, // Enforce high priority
+                                        clock: instance.logical_clock.tick,
+                                    };
+                                    let _ = instance.mailbox.push(recovery_msg);
+                                }
+                            }
+                        }
                         Err(e) => {
                             self.tracer.record(cycle, &name, "GOAL_ERROR", &e);
                             trace.push(format!("[Scheduler Cycle {}] Domain '{}' goal error in '{}': {}", cycle, name, goal.name, e));
@@ -77,7 +111,28 @@ impl Scheduler {
                     }
                 }
 
-                if let Some(msg) = instance.mailbox.pop() {
+                let mut active_trans = None;
+                let mut start_pc = 0;
+                let mut start_outbox = Vec::new();
+                let mut is_resuming = false;
+                let mut initial_registers = [0; 256];
+
+                // Check for preempted threads first
+                if let Some(suspended) = instance.suspended_context.take() {
+                    active = true;
+                    is_resuming = true;
+                    trace.push(format!("[Scheduler Cycle {}] Domain '{}' resuming suspended transition '{}' at pc={}", cycle, name, suspended.transition_name, suspended.pc));
+                    
+                    for t in &instance.bytecode.transitions {
+                        if t.name == suspended.transition_name {
+                            active_trans = Some(t.clone());
+                            break;
+                        }
+                    }
+                    start_pc = suspended.pc;
+                    start_outbox = suspended.outbox;
+                    initial_registers = suspended.registers;
+                } else if let Some(msg) = instance.mailbox.pop() {
                     active = true;
                     instance.logical_clock.update(msg.clock);
                     instance.logical_clock.tick();
@@ -85,45 +140,65 @@ impl Scheduler {
                     self.tracer.record(cycle, &name, "PROCESS_MESSAGE", &msg.payload);
                     trace.push(format!("[Scheduler Cycle {}] Domain '{}' processing message: '{}' (Priority {}, Clock: {})", cycle, name, msg.payload, msg.priority, msg.clock));
                     
-                    let mut matched_trans = None;
                     for t in &instance.bytecode.transitions {
                         if t.name == msg.payload {
-                            matched_trans = Some(t.clone());
+                            active_trans = Some(t.clone());
                             break;
                         }
                     }
-
-                    if let Some(trans) = matched_trans {
-                        let mut interpreter = Interpreter::with_state(instance.state.snapshot());
-                        match interpreter.run_slice(&trans, &instance.schema, slice_gas_limit) {
-                            Ok(mut outbox) => {
-                                instance.state = interpreter.state;
-                                // Sort state keys for deterministic trace output
-                                let state_keys = instance.state.keys_sorted();
-                                
-                                let state_str = state_keys.iter()
-                                    .map(|k| format!("\"{}\": {}", k, instance.state.get(k).unwrap()))
-                                    .collect::<Vec<_>>()
-                                    .join(", ");
-
-                                self.tracer.record(cycle, &name, "STATE_MUTATED", &state_str);
-                                trace.push(format!("[Scheduler Cycle {}] Domain '{}' state AFTER '{}': {{{}}}", cycle, name, trans.name, state_str));
-
-                                // Assign logical clocks to outgoing messages
-                                for out_msg in &mut outbox {
-                                    instance.logical_clock.tick();
-                                    out_msg.clock = instance.logical_clock.tick;
-                                }
-
-                                outbox_all.extend(outbox);
-                            }
-                            Err(e) => {
-                                trace.push(format!("[Scheduler Cycle {}] Execution error in '{}': {}", cycle, name, e));
-                            }
-                        }
-                    } else {
+                    
+                    if active_trans.is_none() {
                         trace.push(format!("[Scheduler Cycle {}] Domain '{}' dropped message '{}' (No matching transition)", cycle, name, msg.payload));
                     }
+                }
+
+                if let Some(trans) = active_trans {
+                    let mut interpreter = Interpreter::with_state(instance.state.snapshot());
+                    if is_resuming {
+                        interpreter.registers = initial_registers;
+                    }
+                    
+                    match interpreter.run_slice(&trans, &instance.schema, slice_gas_limit, start_pc, start_outbox) {
+                        SliceResult::Completed(mut outbox) => {
+                            instance.state = interpreter.state;
+                            // Sort state keys for deterministic trace output
+                            let state_keys = instance.state.keys_sorted();
+                            
+                            let state_str = state_keys.iter()
+                                .map(|k| format!("\"{}\": {}", k, instance.state.get(k).unwrap()))
+                                .collect::<Vec<_>>()
+                                .join(", ");
+
+                            self.tracer.record(cycle, &name, "STATE_MUTATED", &state_str);
+                            trace.push(format!("[Scheduler Cycle {}] Domain '{}' state AFTER '{}': {{{}}}", cycle, name, trans.name, state_str));
+
+                            // Assign logical clocks to outgoing messages
+                            for out_msg in &mut outbox {
+                                instance.logical_clock.tick();
+                                out_msg.clock = instance.logical_clock.tick;
+                            }
+
+                            outbox_all.extend(outbox);
+                        }
+                        SliceResult::Suspended { pc, outbox } => {
+                            trace.push(format!("[Scheduler Cycle {}] Domain '{}' transition '{}' exhausted gas slices, suspended at pc={}. Execution yielded.", cycle, name, trans.name, pc));
+                            instance.suspended_context = Some(SuspendedContext {
+                                transition_name: trans.name.clone(),
+                                pc,
+                                registers: interpreter.registers,
+                                outbox,
+                            });
+                        }
+                        SliceResult::Fault(e) => {
+                            trace.push(format!("[Scheduler Cycle {}] Execution error in '{}': {}", cycle, name, e));
+                        }
+                    }
+                }
+                
+                // Active Quiescence Check: Fall asleep if perfectly stable
+                if instance.mailbox.is_empty() && instance.suspended_context.is_none() && !goals_failed {
+                    instance.is_quiescent = true;
+                    trace.push(format!("[Scheduler Cycle {}] Domain '{}' entered deterministic quiescent sleep state.", cycle, name));
                 }
             }
 
