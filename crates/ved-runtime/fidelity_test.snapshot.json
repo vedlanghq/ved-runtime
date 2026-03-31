@@ -1,0 +1,30 @@
+{
+  "cycle": 100,
+  "domains": {
+    "CounterA": {
+      "state": {
+        "memory": {
+          "val": 51
+        }
+      },
+      "mailbox_high": [],
+      "mailbox_normal": [
+        {
+          "target_domain": "CounterA",
+          "payload": "tick",
+          "priority": 0,
+          "clock": 306
+        }
+      ]
+    },
+    "CounterB": {
+      "state": {
+        "memory": {
+          "val": 0
+        }
+      },
+      "mailbox_high": [],
+      "mailbox_normal": []
+    }
+  }
+}

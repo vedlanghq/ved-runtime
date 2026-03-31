@@ -5,6 +5,15 @@ use crate::goal_engine::GoalEngine;
 use crate::rng::DeterministicRng;
 use ved_tracer::Tracer;
 
+#[derive(Debug, Clone)]
+pub struct ExecutionResult {
+    pub converged: bool,
+    pub steps: usize,
+    pub low_priority_executed: bool,
+    pub warning_detected: bool,
+    pub trace: Vec<String>,
+}
+
 pub struct Scheduler {
     registry: DomainRegistry,
     snapshot_mgr: Option<SnapshotManager>,
@@ -34,20 +43,31 @@ impl Scheduler {
 
     /// Run the simulation until all inboxes are empty.
     /// Returns a full deterministic trace of execution.
-    pub fn execute_until_quiescent(&mut self, max_cycles: usize, slice_gas_limit: usize) -> Vec<String> {
+    pub fn execute_until_quiescent(&mut self, max_cycles: usize, slice_gas_limit: usize) -> ExecutionResult {
         let mut active = true;
         let mut cycle = 0;
         let mut trace = Vec::new();
+        
+        let mut res = ExecutionResult {
+            converged: true,
+            steps: 0,
+            low_priority_executed: false,
+            warning_detected: false,
+            trace: Vec::new(),
+        };
 
         trace.push("[Scheduler] Starting execution loop...".to_string());
 
         while active {
             if cycle >= max_cycles {
                 trace.push(format!("[Scheduler] HALT: Max cycles {} reached. Stopping to prevent infinite loop.", max_cycles));
+                res.converged = false;
+                res.warning_detected = true;
                 break;
             }
             active = false;
             cycle += 1;
+            res.steps += 1;
 
             let mut outbox_all = Vec::new();
 
@@ -134,6 +154,9 @@ impl Scheduler {
                     initial_registers = suspended.registers;
                 } else if let Some(msg) = instance.mailbox.pop() {
                     active = true;
+                    if msg.priority == 0 {
+                        res.low_priority_executed = true;
+                    }
                     instance.logical_clock.update(msg.clock);
                     instance.logical_clock.tick();
                     
@@ -226,7 +249,8 @@ impl Scheduler {
         }
 
         trace.push("[Scheduler] Quiescent state reached. Halting.".to_string());
-        trace
+        res.trace = trace;
+        res
     }
 
     pub fn get_registry(&self) -> &DomainRegistry {
@@ -319,7 +343,7 @@ mod tests {
                 clock: 0,
             });
             let mut scheduler = Scheduler::new(registry);
-            let trace = scheduler.execute_until_quiescent(1000, 1000);
+            let trace = scheduler.execute_until_quiescent(1000, 1000).trace;
             if i == 0 {
                 first_trace = trace;
             } else {

@@ -1,5 +1,5 @@
 use ved_ir::bytecode::{TransitionBytecode, OpCode, Constant};
-use ved_runtime::interpreter::Interpreter;
+use ved_runtime::interpreter::{Interpreter, SliceResult};
 use ved_runtime::messaging::{Message, Mailbox};
 use ved_runtime::state::IsolatedState;
 
@@ -25,14 +25,14 @@ fn test_1c_instruction_budgeting() {
     // Set gas limit very low to test exhaustion
     let gas_limit = 50;
     
-    let result = interpreter.run_slice(&trans, &field_names, gas_limit);
+    let result = interpreter.run_slice(&trans, &field_names, gas_limit, 0, vec![]);
     
     match result {
-        Err(msg) => {
-            assert!(msg.contains("Slice exhausted gas boundary"));
-            assert!(msg.contains("50"));
+        SliceResult::Suspended { .. } => {
+            // Expected! Budget exhausted.
         },
-        Ok(_) => panic!("Expected slice to exhaust instruction budget and error out!"),
+        SliceResult::Fault(msg) => panic!("Expected structural suspension yielding, not hard fault! {}", msg),
+        SliceResult::Completed(_) => panic!("Expected slice to exhaust instruction budget and suspend!"),
     }
 }
 
