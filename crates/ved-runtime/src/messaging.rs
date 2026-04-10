@@ -1,8 +1,22 @@
-use std::collections::VecDeque;
+use std::collections::{VecDeque, HashMap};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum EffectState {
+    Emitted,     // SendMsg executed, effect created
+    Executing,   // Message routed to target mailbox
+    Recorded,    // Message delivered + state mutation completed
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct EffectJournal {
+    pub states: HashMap<String, EffectState>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Message {
+    pub id: String,
+    pub source_domain: String,
     pub target_domain: String,
     pub payload: String,
     pub priority: u8, // 0 = Normal, 1 = High

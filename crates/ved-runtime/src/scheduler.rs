@@ -69,7 +69,7 @@ impl Scheduler {
             cycle += 1;
             res.steps += 1;
 
-            let mut outbox_all = Vec::new();
+            let mut outbox_all: Vec<(String, crate::messaging::Message)> = Vec::new();
 
             let mut domains_with_weights: Vec<(String, u64)> = self.registry.instances.iter()
                 .filter(|(_, v)| !v.is_quiescent)
@@ -145,6 +145,8 @@ impl Scheduler {
                         if !already_queued {
                             active = true;
                             let recovery_msg = crate::messaging::Message {
+                                id: format!("{}_recovery_{}_{}", name, strat, cycle),
+                                source_domain: name.clone(),
                                 target_domain: name.clone(),
                                 payload: strat.clone(),
                                 priority: 1, // Enforce high priority
@@ -163,11 +165,15 @@ impl Scheduler {
                 let mut start_outbox = Vec::new();
                 let mut is_resuming = false;
                 let mut initial_registers = [0; 256];
+                let mut current_trigger_msg_id = None;
+                let mut current_trigger_msg_sender = None;
 
                 // Check for preempted threads first
                 if let Some(suspended) = instance.suspended_context.take() {
                     active = true;
                     is_resuming = true;
+                    current_trigger_msg_id = suspended.trigger_msg_id;
+                    current_trigger_msg_sender = suspended.trigger_msg_sender;
                     trace.push(format!("[Scheduler Cycle {}] Domain '{}' resuming suspended transition '{}' at pc={}", cycle, name, suspended.transition_name, suspended.pc));
                     
                     for t in &instance.bytecode.transitions {
@@ -187,6 +193,9 @@ impl Scheduler {
                     instance.logical_clock.update(msg.clock);
                     instance.logical_clock.tick();
                     
+                    current_trigger_msg_id = Some(msg.id.clone());
+                    current_trigger_msg_sender = Some(msg.source_domain.clone());
+
                     self.tracer.record(cycle, &name, "PROCESS_MESSAGE", &msg.payload);
                     trace.push(format!("[Scheduler Cycle {}] Domain '{}' processing message: '{}' (Priority {}, Clock: {})", cycle, name, msg.payload, msg.priority, msg.clock));
                     
@@ -226,9 +235,33 @@ impl Scheduler {
                             for out_msg in &mut outbox {
                                 instance.logical_clock.tick();
                                 out_msg.clock = instance.logical_clock.tick;
+                                out_msg.id = format!("{}_{}_{}", name, out_msg.clock, cycle);
+                                
+                                // Idempotency Check: if it was already recorded, don't re-emit
+                                if instance.effect_journal.states.get(&out_msg.id) == Some(&crate::messaging::EffectState::Recorded) {
+                                    trace.push(format!("[Scheduler] Idempotency slip: message {} already Recorded, skipping.", out_msg.id));
+                                    continue;
+                                }
+                                
+                                instance.effect_journal.states.insert(out_msg.id.clone(), crate::messaging::EffectState::Emitted);
                             }
 
-                            outbox_all.extend(outbox);
+                            outbox_all.extend(outbox.into_iter().map(|m| (name.clone(), m)));
+
+                            // Mark the trigger message as Recorded in the sender's journal
+                            if let (Some(msg_id), Some(sender_name)) = (&current_trigger_msg_id, &current_trigger_msg_sender) {
+                                // Since we're iterating registry, we need to defer this to after the loop.
+                                // Instead of making it complex, we can add it to a list of recorded effects.
+                                // Actually, no - we can't borrow mut registry here. Let's output it.
+                                outbox_all.push((sender_name.clone(), crate::messaging::Message {
+                                    id: msg_id.clone(),
+                                    source_domain: "SYSTEM_ACK".to_string(), // Special marker
+                                    target_domain: sender_name.clone(),
+                                    payload: "".to_string(),
+                                    priority: 0,
+                                    clock: 0,
+                                }));
+                            }
                         }
                         SliceResult::Suspended { pc, outbox } => {
                             trace.push(format!("[Scheduler Cycle {}] Domain '{}' transition '{}' exhausted gas slices, suspended at pc={}. Execution yielded.", cycle, name, trans.name, pc));
@@ -237,6 +270,8 @@ impl Scheduler {
                                 pc,
                                 registers: interpreter.registers,
                                 outbox,
+                                trigger_msg_id: current_trigger_msg_id,
+                                trigger_msg_sender: current_trigger_msg_sender,
                             });
                         }
                         SliceResult::Fault(e) => {
@@ -252,14 +287,28 @@ impl Scheduler {
                 }
             }
 
-            for msg in outbox_all {
+            for (sender, msg) in outbox_all {
+                let msg_id = msg.id.clone();
+                if msg.source_domain == "SYSTEM_ACK" {
+                    // Update journal to mark effect as Recorded
+                    if let Some(instance) = self.registry.get_mut(&sender) {
+                        instance.effect_journal.states.insert(msg_id, crate::messaging::EffectState::Recorded);
+                    }
+                    continue;
+                }
+
                 let msg_details = format!("Payload: {}, Target: {}", msg.payload, msg.target_domain);
                 self.tracer.record(cycle, "SYSTEM", "ROUTING_MESSAGE", &msg_details);
                 trace.push(format!("[Scheduler Cycle {}] Routing message -> [Target: {}, Payload: {}, Priority: {}, Clock: {}]", cycle, msg.target_domain, msg.payload, msg.priority, msg.clock));
+                
                 if let Err(e) = self.registry.route_message(msg) {
                     trace.push(format!("[Scheduler Cycle {}] ROUTING ERROR (Mailbox Full): {:?}", cycle, e));
                 } else {
                     active = true;
+                    // Mark as executing
+                    if let Some(instance) = self.registry.get_mut(&sender) {
+                        instance.effect_journal.states.insert(msg_id, crate::messaging::EffectState::Executing);
+                    }
                 }
             }
 
@@ -364,6 +413,8 @@ mod tests {
         for i in 0..50 {
             let mut registry = setup_registry();
             let _ = registry.route_message(Message {
+                id: format!("test_ping_{}", i),
+                source_domain: "SYSTEM".to_string(),
                 target_domain: "Producer".to_string(),
                 payload: "send_ping".to_string(),
                 priority: 0,
@@ -388,6 +439,8 @@ mod tests {
         // Send 3 messages
         for i in 0..3 {
             let res = registry.route_message(Message {
+                id: format!("test_msg_{}", i),
+                source_domain: "SYSTEM".to_string(),
                 target_domain: "Consumer".to_string(),
                 payload: "receive_ping".to_string(),
                 priority: 0,
@@ -406,10 +459,10 @@ mod tests {
         let mut mb = Mailbox::new(10);
         
         // Push 1 normal
-        mb.push(Message { target_domain: "A".to_string(), payload: "N".to_string(), priority: 0, clock: 0 }).unwrap();
+        mb.push(Message { id: "n1".into(), source_domain: "S".into(), target_domain: "A".to_string(), payload: "N".to_string(), priority: 0, clock: 0 }).unwrap();
         // Push 4 high
         for i in 0..4 {
-            mb.push(Message { target_domain: "A".to_string(), payload: "H".to_string(), priority: 1, clock: i as u64 }).unwrap();
+            mb.push(Message { id: format!("h{}", i), source_domain: "S".into(), target_domain: "A".to_string(), payload: "H".to_string(), priority: 1, clock: i as u64 }).unwrap();
         }
 
         // Expected pop order: High, High, High, Normal, High

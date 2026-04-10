@@ -5,7 +5,7 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 
 use crate::state::IsolatedState;
-use crate::messaging::Message;
+use crate::messaging::{Message, EffectJournal};
 use crate::domain_registry::DomainRegistry;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -19,6 +19,7 @@ pub struct DomainSnapshot {
     pub state: IsolatedState,
     pub mailbox_high: Vec<Message>,
     pub mailbox_normal: Vec<Message>,
+    pub effect_journal: EffectJournal,
 }
 
 pub struct SnapshotManager {
@@ -58,6 +59,7 @@ impl SnapshotManager {
                 state: instance.state.clone(),
                 mailbox_high: instance.mailbox.high.iter().cloned().collect(),
                 mailbox_normal: instance.mailbox.normal.iter().cloned().collect(),
+                effect_journal: instance.effect_journal.clone(),
             };
             data.domains.insert(name.clone(), domain_snap);
         }
@@ -83,6 +85,8 @@ impl SnapshotManager {
                 // Restore mailbox
                 instance.mailbox.high = domain_snap.mailbox_high.into();
                 instance.mailbox.normal = domain_snap.mailbox_normal.into();
+                // Restore effect journal
+                instance.effect_journal = domain_snap.effect_journal;
             } else {
                 return Err(format!("Snapshot contains unknown domain '{}'", name));
             }

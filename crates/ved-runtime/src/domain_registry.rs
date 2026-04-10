@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use ved_ir::bytecode::DomainBytecode;
 use crate::state::IsolatedState;
-use crate::messaging::{Message, Mailbox};
+use crate::messaging::{Message, Mailbox, EffectJournal, EffectState};
 use crate::logical_clock::LogicalClock;
 
 #[derive(Debug, Clone)]
@@ -10,6 +10,8 @@ pub struct SuspendedContext {
     pub pc: usize,
     pub registers: [i64; 256],
     pub outbox: Vec<Message>,
+    pub trigger_msg_id: Option<String>,
+    pub trigger_msg_sender: Option<String>,
 }
 
 pub struct DomainInstance {
@@ -24,6 +26,7 @@ pub struct DomainInstance {
     pub suspended_context: Option<SuspendedContext>,
     pub last_failed_goal: Option<String>,
     pub goal_oscillation_count: u32,
+    pub effect_journal: EffectJournal,
 }
 
 impl DomainInstance {
@@ -42,6 +45,7 @@ impl DomainInstance {
             suspended_context: None,
             last_failed_goal: None,
             goal_oscillation_count: 0,
+            effect_journal: EffectJournal::default(),
         }
     }
 

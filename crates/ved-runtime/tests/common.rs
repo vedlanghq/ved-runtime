@@ -17,7 +17,7 @@ pub fn run_ved_program(source: &str, boot_messages: Vec<(&str, &str, u8)>, max_c
     }
 
     for (target, payload, priority) in boot_messages {
-        let boot_msg = Message {
+        let boot_msg = Message { id: "".into(), source_domain: "SYSTEM".into(),
             target_domain: target.to_string(),
             payload: payload.to_string(),
             priority,

@@ -28,7 +28,7 @@ fn test_adversarial_infinite_loop_gas_limit() {
     let instance = DomainInstance::new("Malicious".to_string(), vec![], domain);
     registry.register(instance);
     
-    let msg = Message {
+    let msg = Message { id: "".into(), source_domain: "SYSTEM".into(),
         target_domain: "Malicious".to_string(),
         payload: "infinite_loop".to_string(),
         priority: 0,
@@ -70,7 +70,7 @@ fn test_scheduler_starvation_fairness_flood() {
 
     // Flood the mailbox with 10 high-priority messages and 10 normal-priority messages
     for i in 0..10 {
-        registry.route_message(Message {
+        registry.route_message(Message { id: "".into(), source_domain: "SYSTEM".into(),
             target_domain: "Victim".to_string(),
             payload: "consume_high".to_string(),
             priority: 1, // HIGH
@@ -78,7 +78,7 @@ fn test_scheduler_starvation_fairness_flood() {
         }).unwrap();
     }
     for i in 0..10 {
-        registry.route_message(Message {
+        registry.route_message(Message { id: "".into(), source_domain: "SYSTEM".into(),
             target_domain: "Victim".to_string(),
             payload: "consume_normal".to_string(),
             priority: 0, // NORMAL

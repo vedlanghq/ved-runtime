@@ -43,7 +43,7 @@ fn test_3b_starvation_edge_cases() {
     
     // Push 5 high-priority messages
     for i in 0..5 {
-        mailbox.push(Message {
+        mailbox.push(Message { id: "".into(), source_domain: "SYSTEM".into(),
             target_domain: "Target".to_string(),
             payload: format!("high_{}", i),
             priority: 1,
@@ -53,7 +53,7 @@ fn test_3b_starvation_edge_cases() {
     
     // Push 5 normal messages
     for i in 0..5 {
-        mailbox.push(Message {
+        mailbox.push(Message { id: "".into(), source_domain: "SYSTEM".into(),
             target_domain: "Target".to_string(),
             payload: format!("normal_{}", i),
             priority: 0,

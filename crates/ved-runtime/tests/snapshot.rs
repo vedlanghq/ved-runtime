@@ -32,8 +32,8 @@ fn test_snapshot_integrity() {
         );
         registry.register(instance);
         
-        registry.route_message(Message { target_domain: "Counter".into(), payload: "run".into(), priority: 0, clock: 0 }).unwrap();
-        registry.route_message(Message { target_domain: "Counter".into(), payload: "run".into(), priority: 0, clock: 0 }).unwrap();
+        registry.route_message(Message { id: "".into(), source_domain: "SYSTEM".into(), target_domain: "Counter".into(), payload: "run".into(), priority: 0, clock: 0 }).unwrap();
+        registry.route_message(Message { id: "".into(), source_domain: "SYSTEM".into(), target_domain: "Counter".into(), payload: "run".into(), priority: 0, clock: 0 }).unwrap();
 
         let mgr = SnapshotManager::new(snapshot_file);
         let mut scheduler = Scheduler::new(registry).with_snapshots(mgr);
