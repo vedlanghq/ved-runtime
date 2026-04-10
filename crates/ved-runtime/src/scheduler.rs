@@ -96,7 +96,7 @@ impl Scheduler {
                 // 1. Evaluate Goals
                 // If a goal evaluates to true, we don't automatically stop the runtime, 
                 // but we might log it or trigger a transition. For v0.1: just log if semantic goal is met.
-                let mut goals_failed = false;
+                let mut failed_goals = Vec::new();
                 for goal in &instance.bytecode.goals {
                     match GoalEngine::evaluate(goal, &instance.state, &instance.schema, slice_gas_limit) {
                         Ok(true) => {
@@ -104,31 +104,58 @@ impl Scheduler {
                             trace.push(format!("[Scheduler Cycle {}] Domain '{}' achieved GOAL: '{}'", cycle, name, goal.name));
                         }
                         Ok(false) => { 
-                            goals_failed = true;
-                            self.tracer.record(cycle, &name, "GOAL_FAILED", &goal.name);
-                            trace.push(format!("[Scheduler Cycle {}] Domain '{}' GOAL FAILED: '{}' -> Scheduling recovery strategies", cycle, name, goal.name));
-                            for strat in &goal.recovery_transitions {
-                                // Idempotency Check: Do not enqueue if it is already queued.
-                                let already_queued = instance.mailbox.high.iter().any(|m| &m.payload == strat) ||
-                                                     instance.mailbox.normal.iter().any(|m| &m.payload == strat);
-                                
-                                if !already_queued {
-                                    active = true;
-                                    let recovery_msg = crate::messaging::Message {
-                                        target_domain: name.clone(),
-                                        payload: strat.clone(),
-                                        priority: 1, // Enforce high priority
-                                        clock: instance.logical_clock.tick,
-                                    };
-                                    let _ = instance.mailbox.push(recovery_msg);
-                                }
-                            }
+                            failed_goals.push(goal.clone());
                         }
                         Err(e) => {
                             self.tracer.record(cycle, &name, "GOAL_ERROR", &e);
                             trace.push(format!("[Scheduler Cycle {}] Domain '{}' goal error in '{}': {}", cycle, name, goal.name, e));
                         }
                     }
+                }
+
+                if !failed_goals.is_empty() {
+                    // Goal Conflict Resolution
+                    failed_goals.sort_by(|a, b| b.priority.cmp(&a.priority));
+                    let highest_priority_goal = &failed_goals[0];
+
+                    self.tracer.record(cycle, &name, "GOAL_FAILED", &highest_priority_goal.name);
+                    trace.push(format!("[Scheduler Cycle {}] Domain '{}' GOAL FAILED: '{}' -> Scheduling recovery strategies (Priority {})", cycle, name, highest_priority_goal.name, highest_priority_goal.priority));
+
+                    // Oscillation check
+                    if Some(highest_priority_goal.name.clone()) == instance.last_failed_goal {
+                        instance.goal_oscillation_count += 1;
+                    } else {
+                        instance.last_failed_goal = Some(highest_priority_goal.name.clone());
+                        instance.goal_oscillation_count = 1;
+                    }
+                    
+                    if instance.goal_oscillation_count >= 10 { // Allow some retries before failing
+                        trace.push(format!("[Scheduler] DETERMINISM FAULT: Domain '{}' oscillating on goal '{}'. Execution halted.", name, highest_priority_goal.name));
+                        res.converged = false;
+                        res.warning_detected = true;
+                        res.trace = trace;
+                        // Halt whole execution
+                        return res;
+                    }
+
+                    for strat in &highest_priority_goal.recovery_transitions {
+                        let already_queued = instance.mailbox.high.iter().any(|m| &m.payload == strat) ||
+                                             instance.mailbox.normal.iter().any(|m| &m.payload == strat);
+                        
+                        if !already_queued {
+                            active = true;
+                            let recovery_msg = crate::messaging::Message {
+                                target_domain: name.clone(),
+                                payload: strat.clone(),
+                                priority: 1, // Enforce high priority
+                                clock: instance.logical_clock.tick,
+                            };
+                            let _ = instance.mailbox.push(recovery_msg);
+                        }
+                    }
+                } else {
+                    instance.last_failed_goal = None;
+                    instance.goal_oscillation_count = 0;
                 }
 
                 let mut active_trans = None;
@@ -219,7 +246,7 @@ impl Scheduler {
                 }
                 
                 // Active Quiescence Check: Fall asleep if perfectly stable
-                if instance.mailbox.is_empty() && instance.suspended_context.is_none() && !goals_failed {
+                if instance.mailbox.is_empty() && instance.suspended_context.is_none() && failed_goals.is_empty() {
                     instance.is_quiescent = true;
                     trace.push(format!("[Scheduler Cycle {}] Domain '{}' entered deterministic quiescent sleep state.", cycle, name));
                 }

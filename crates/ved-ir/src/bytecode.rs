@@ -60,6 +60,7 @@ pub struct TransitionBytecode {
 #[derive(Debug, Clone)]
 pub struct GoalBytecode {
     pub name: String,
+    pub priority: u8,
     pub recovery_transitions: Vec<String>,
     pub constants: Vec<Constant>,
     pub instructions: Vec<OpCode>,

@@ -22,6 +22,8 @@ pub struct DomainInstance {
     pub logical_clock: LogicalClock,
     pub is_quiescent: bool,
     pub suspended_context: Option<SuspendedContext>,
+    pub last_failed_goal: Option<String>,
+    pub goal_oscillation_count: u32,
 }
 
 impl DomainInstance {
@@ -38,6 +40,8 @@ impl DomainInstance {
             logical_clock: LogicalClock::new(),
             is_quiescent: false,
             suspended_context: None,
+            last_failed_goal: None,
+            goal_oscillation_count: 0,
         }
     }
 
