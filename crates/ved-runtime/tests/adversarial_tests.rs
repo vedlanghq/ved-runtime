@@ -13,6 +13,8 @@ fn test_1c_instruction_budgeting() {
     // Create bytecode with an infinite loop: Jump to 0.
     let trans = TransitionBytecode {
         name: "infinite_loop".to_string(),
+        scope: None,
+        required_capabilities: vec![],
         instructions: vec![
             OpCode::LoadConst { const_idx: 0, dest_reg: 0 },
             OpCode::Jump { target_offset: 0 }, // infinite loop

@@ -186,6 +186,8 @@ mod tests {
 
         let trans = TransitionBytecode {
             name: "test".to_string(),
+            required_capabilities: vec![],
+            scope: None,
             constants: vec![Constant::Int(1)],
             instructions: vec![
                 OpCode::LoadState { field_idx: 0, dest_reg: 0 },

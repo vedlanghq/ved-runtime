@@ -9,6 +9,8 @@ fn test_adversarial_infinite_loop_gas_limit() {
 
     let trans = TransitionBytecode {
         name: "infinite_loop".to_string(),
+        required_capabilities: vec![],
+        scope: None,
         constants: vec![Constant::Int(1)],
         instructions: vec![
             // pc = 0
@@ -20,6 +22,8 @@ fn test_adversarial_infinite_loop_gas_limit() {
 
     let domain = DomainBytecode {
         name: "Malicious".to_string(),
+        capability_manifest: vec![],
+        scope: None,
         state_schema: vec![],
         goals: vec![],
         transitions: vec![trans]
@@ -50,17 +54,23 @@ fn test_scheduler_starvation_fairness_flood() {
     // Add a simple domain to receive messages
     let trans1 = TransitionBytecode {
         name: "consume_normal".to_string(),
+        required_capabilities: vec![],
+        scope: None,
         constants: vec![],
         instructions: vec![OpCode::HaltSlice],
     };
     let trans2 = TransitionBytecode {
         name: "consume_high".to_string(),
+        required_capabilities: vec![],
+        scope: None,
         constants: vec![],
         instructions: vec![OpCode::HaltSlice],
     };
 
     let domain = DomainBytecode {
         name: "Victim".to_string(),
+        capability_manifest: vec![],
+        scope: None,
         state_schema: vec![],
         goals: vec![],
         transitions: vec![trans1, trans2]

@@ -349,6 +349,8 @@ mod tests {
         // Setup Producer
         let prod_trans = TransitionBytecode {
             name: "send_ping".to_string(),
+            required_capabilities: vec![],
+            scope: None,
             constants: vec![
                 Constant::Int(1),
                 Constant::String("Consumer".to_string()),
@@ -364,6 +366,8 @@ mod tests {
         
         let prod_bc = DomainBytecode {
             name: "Producer".to_string(),
+            capability_manifest: vec![],
+            scope: None,
             state_schema: vec!["sent".to_string()],
             transitions: vec![prod_trans],
             goals: vec![],
@@ -379,6 +383,8 @@ mod tests {
         // Setup Consumer
         let cons_trans = TransitionBytecode {
             name: "receive_ping".to_string(),
+            required_capabilities: vec![],
+            scope: None,
             constants: vec![
                 Constant::Int(1),
             ],
@@ -393,6 +399,8 @@ mod tests {
 
         let cons_bc = DomainBytecode {
             name: "Consumer".to_string(),
+            capability_manifest: vec![],
+            scope: None,
             state_schema: vec!["pings".to_string()],
             transitions: vec![cons_trans],
             goals: vec![],
