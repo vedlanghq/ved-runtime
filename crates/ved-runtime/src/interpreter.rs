@@ -5,6 +5,7 @@ use crate::state::IsolatedState;
 pub struct Interpreter {
     pub state: IsolatedState,
     pub registers: [i64; 256],
+    pub available_capabilities: Vec<String>,
 }
 
 pub enum SliceResult {
@@ -18,6 +19,7 @@ impl Interpreter {
         Self {
             state: IsolatedState::new(schema),
             registers: [0; 256],
+            available_capabilities: vec![],
         }
     }
 
@@ -25,7 +27,12 @@ impl Interpreter {
         Self {
             state,
             registers: [0; 256],
+            available_capabilities: vec![],
         }
+    }
+
+    pub fn set_capabilities(&mut self, caps: Vec<String>) {
+        self.available_capabilities = caps;
     }
 
     /// Executes a deterministic slice of bytecode, returning messages to route.
@@ -130,6 +137,11 @@ impl Interpreter {
                         Constant::String(s) => s.clone(),
                         _ => return SliceResult::Fault("SendMsg target must be a string".to_string()),
                     };
+                    
+                    if !self.available_capabilities.contains(&format!("send_to:{}", target_domain)) && !self.available_capabilities.contains(&"root".to_string()) {
+                        return SliceResult::Fault(format!("Authority/Scope breach: missing capability 'send_to:{}'", target_domain));
+                    }
+                    
                     let payload = match &consts[*msg_const_idx] {
                         Constant::String(s) => s.clone(),
                         _ => return SliceResult::Fault("SendMsg payload must be a string".to_string()),
@@ -141,6 +153,11 @@ impl Interpreter {
                         Constant::String(s) => s.clone(),
                         _ => return SliceResult::Fault("SendHighMsg target must be a string".to_string()),
                     };
+                    
+                    if !self.available_capabilities.contains(&format!("send_to:{}", target_domain)) && !self.available_capabilities.contains(&"root".to_string()) {
+                        return SliceResult::Fault(format!("Authority/Scope breach: missing capability 'send_to:{}'", target_domain));
+                    }
+                    
                     let payload = match &consts[*msg_const_idx] {
                         Constant::String(s) => s.clone(),
                         _ => return SliceResult::Fault("SendHighMsg payload must be a string".to_string()),

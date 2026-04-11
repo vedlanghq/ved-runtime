@@ -53,6 +53,8 @@ pub enum OpCode {
 #[derive(Debug, Clone)]
 pub struct TransitionBytecode {
     pub name: String,
+    pub scope: Option<String>,
+    pub required_capabilities: Vec<String>,
     pub constants: Vec<Constant>,
     pub instructions: Vec<OpCode>,
 }
@@ -60,6 +62,8 @@ pub struct TransitionBytecode {
 #[derive(Debug, Clone)]
 pub struct GoalBytecode {
     pub name: String,
+    pub scope: Option<String>,
+    pub required_capabilities: Vec<String>,
     pub priority: u8,
     pub recovery_transitions: Vec<String>,
     pub constants: Vec<Constant>,
@@ -69,6 +73,8 @@ pub struct GoalBytecode {
 #[derive(Debug, Clone)]
 pub struct DomainBytecode {
     pub name: String,
+    pub scope: Option<String>,
+    pub capability_manifest: Vec<String>,
     pub state_schema: Vec<String>,
     pub transitions: Vec<TransitionBytecode>,
     pub goals: Vec<GoalBytecode>,

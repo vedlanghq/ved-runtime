@@ -213,6 +213,8 @@ impl Scheduler {
 
                 if let Some(trans) = active_trans {
                     let mut interpreter = Interpreter::with_state(instance.state.snapshot());
+                    interpreter.set_capabilities(instance.bytecode.capability_manifest.clone());
+                    
                     if is_resuming {
                         interpreter.registers = initial_registers;
                     }
