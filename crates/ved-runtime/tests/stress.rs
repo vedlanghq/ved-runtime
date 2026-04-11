@@ -5,8 +5,10 @@ use common::run_ved_program;
 fn test_message_storm() {
     let program = r#"
         domain Ping {
+            capability { messaging, send_to:Ping }
             state { _x: int }
             transition run {
+                capability { messaging, send_to:Ping }
                 slice step {
                     send("Ping", "run")
                     send("Ping", "run")

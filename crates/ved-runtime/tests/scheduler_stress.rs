@@ -5,8 +5,10 @@ use common::run_ved_program;
 fn test_no_starvation() {
     let program = r#"
         domain HighPriority {
+            capability { messaging, send_to:HighPriority }
             state { counter: int }
             transition Spam {
+                capability { messaging, send_to:HighPriority }
                 slice step {
                     send_high("HighPriority", "Spam")
                 }

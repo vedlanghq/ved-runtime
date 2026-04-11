@@ -24,8 +24,10 @@ fn test_convergence() {
 fn test_oscillation_detection() {
     let program = r#"
         domain Target {
+            capability { messaging, send_to:Target }
             state { _x: int }
             transition oscillate {
+                capability { messaging, send_to:Target }
                 slice step {
                     send("Target", "oscillate")
                 }
