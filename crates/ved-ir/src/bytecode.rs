@@ -71,6 +71,13 @@ pub struct GoalBytecode {
 }
 
 #[derive(Debug, Clone)]
+pub struct InvariantBytecode {
+    pub name: String,
+    pub constants: Vec<Constant>,
+    pub instructions: Vec<OpCode>,
+}
+
+#[derive(Debug, Clone)]
 pub struct DomainBytecode {
     pub name: String,
     pub scope: Option<String>,
@@ -78,6 +85,7 @@ pub struct DomainBytecode {
     pub state_schema: Vec<String>,
     pub transitions: Vec<TransitionBytecode>,
     pub goals: Vec<GoalBytecode>,
+    pub invariants: Vec<InvariantBytecode>,
 }
 
 #[derive(Debug, Clone)]
@@ -243,6 +251,20 @@ impl BinaryPacker {
                 
                 let mut instr_buf = Vec::new();
                 for instr in &g.instructions {
+                    instr.pack(&mut instr_buf);
+                }
+                buf.extend_from_slice(&(instr_buf.len() as u32).to_le_bytes());
+                buf.extend_from_slice(&instr_buf);
+            }
+            
+            // Invariants
+            buf.extend_from_slice(&(dom.invariants.len() as u16).to_le_bytes());
+            for inv in &dom.invariants {
+                Self::write_string(&inv.name, &mut buf);
+                Self::write_constants(&inv.constants, &mut buf);
+                
+                let mut instr_buf = Vec::new();
+                for instr in &inv.instructions {
                     instr.pack(&mut instr_buf);
                 }
                 buf.extend_from_slice(&(instr_buf.len() as u32).to_le_bytes());

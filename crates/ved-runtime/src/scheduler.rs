@@ -8,6 +8,7 @@ use ved_tracer::Tracer;
 #[derive(Debug, Clone)]
 pub struct ExecutionResult {
     pub converged: bool,
+    pub oscillating: bool,
     pub steps: usize,
     pub low_priority_executed: bool,
     pub warning_detected: bool,
@@ -50,6 +51,7 @@ impl Scheduler {
         
         let mut res = ExecutionResult {
             converged: true,
+            oscillating: false,
             steps: 0,
             low_priority_executed: false,
             warning_detected: false,
@@ -113,6 +115,27 @@ impl Scheduler {
                     }
                 }
 
+                // 1.5 Evaluate Invariants (Skips initial unbooted cycle zero-bounds natively)
+                if cycle > 1 {
+                    for inv in &instance.bytecode.invariants {
+                        match GoalEngine::evaluate_invariant(inv, &instance.state, &instance.schema, slice_gas_limit) {
+                            Ok(false) => {
+                                self.tracer.record(cycle, &name, "INVARIANT_VIOLATED", &inv.name);
+                                trace.push(format!("[Scheduler Cycle {}] 🔴 FATAL: Domain '{}' INVARIANT VIOLATED: '{}'", cycle, name, inv.name));
+                                res.converged = false;
+                                res.warning_detected = true;
+                                res.trace = trace;
+                                return res; // Halt immediately
+                            }
+                            Err(e) => {
+                                self.tracer.record(cycle, &name, "INVARIANT_ERROR", &e);
+                                trace.push(format!("[Scheduler Cycle {}] Domain '{}' invariant error in '{}': {}", cycle, name, inv.name, e));
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+
                 if !failed_goals.is_empty() {
                     // Goal Conflict Resolution
                     failed_goals.sort_by(|a, b| b.priority.cmp(&a.priority));
@@ -130,8 +153,9 @@ impl Scheduler {
                     }
                     
                     if instance.goal_oscillation_count >= 10 { // Allow some retries before failing
-                        trace.push(format!("[Scheduler] DETERMINISM FAULT: Domain '{}' oscillating on goal '{}'. Execution halted.", name, highest_priority_goal.name));
+                        trace.push(format!("[Scheduler] ⚠ OSCILLATION DETECTED: Domain '{}' oscillating on goal '{}'. Execution halted.", name, highest_priority_goal.name));
                         res.converged = false;
+                        res.oscillating = true;
                         res.warning_detected = true;
                         res.trace = trace;
                         // Halt whole execution
@@ -221,6 +245,7 @@ impl Scheduler {
                     
                     match interpreter.run_slice(&trans, &instance.schema, slice_gas_limit, start_pc, start_outbox) {
                         SliceResult::Completed(mut outbox) => {
+                            // (Oscillation count is NOT reset here because flipping states back and forth is livelock oscillation)
                             instance.state = interpreter.state;
                             // Sort state keys for deterministic trace output
                             let state_keys = instance.state.keys_sorted();
