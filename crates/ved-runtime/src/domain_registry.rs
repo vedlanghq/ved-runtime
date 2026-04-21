@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use ved_ir::bytecode::DomainBytecode;
 use crate::state::IsolatedState;
-use crate::messaging::{Message, Mailbox, EffectJournal, EffectState};
+use crate::messaging::{Message, Mailbox, EffectJournal};
 use crate::logical_clock::LogicalClock;
 
 #[derive(Debug, Clone)]
