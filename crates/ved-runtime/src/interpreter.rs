@@ -43,11 +43,13 @@ impl Interpreter {
         let consts = &trans.constants;
 
         while pc < code.len() {
-            if gas_used >= gas_limit {
+            let inst = &code[pc];
+            let cost = inst.gas_cost() as usize;
+            
+            if gas_used + cost > gas_limit {
                 return SliceResult::Suspended { pc, outbox };
             }
-            gas_used += 1;
-            let inst = &code[pc];
+            gas_used += cost;
             pc += 1;
 
             match inst {

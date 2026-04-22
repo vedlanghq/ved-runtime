@@ -131,6 +131,33 @@ impl OpCode {
         }
     }
 
+    pub fn gas_cost(&self) -> u32 {
+        match self {
+            OpCode::LoadConst { .. } => 1,
+            OpCode::LoadState { .. } => 5,
+            OpCode::StoreState { .. } => 10,
+            
+            OpCode::AddInt { .. } | OpCode::SubInt { .. } | OpCode::MulInt { .. } | OpCode::DivInt { .. } => 2,
+            
+            OpCode::CmpEq { .. } | OpCode::CmpLt { .. } | OpCode::CmpGt { .. } | OpCode::CmpGte { .. } | OpCode::CmpLte { .. } => 2,
+            
+            OpCode::AndBool { .. } | OpCode::OrBool { .. } | OpCode::NotBool { .. } => 1,
+            
+            OpCode::JumpIfFalse { .. } | OpCode::Jump { .. } => 3,
+            
+            OpCode::ListLen { .. } => 2,
+            OpCode::ListGet { .. } => 5,
+            OpCode::ListAppend { .. } => 15,
+            
+            OpCode::SendMsg { .. } => 50,
+            OpCode::SendHighMsg { .. } => 60,
+            OpCode::EmitEffect { .. } => 40,
+            OpCode::CheckGoal { .. } => 20,
+            
+            OpCode::HaltSlice => 1,
+        }
+    }
+
     /// Packs instruction into [opcode: u8] [operand_count: u8] [operands: bytes...]
     pub fn pack(&self, buf: &mut Vec<u8>) {
         buf.push(self.opcode_tag());
