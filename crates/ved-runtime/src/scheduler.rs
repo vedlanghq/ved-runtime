@@ -396,6 +396,7 @@ mod tests {
             state_schema: vec!["sent".to_string()],
             transitions: vec![prod_trans],
             goals: vec![],
+            invariants: vec![],
         };
 
         let prod_instance = DomainInstance::new(
@@ -429,6 +430,7 @@ mod tests {
             state_schema: vec!["pings".to_string()],
             transitions: vec![cons_trans],
             goals: vec![],
+            invariants: vec![],
         };
 
         let cons_instance = DomainInstance::new(

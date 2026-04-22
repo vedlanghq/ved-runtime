@@ -26,6 +26,7 @@ fn test_adversarial_infinite_loop_gas_limit() {
         scope: None,
         state_schema: vec![],
         goals: vec![],
+        invariants: vec![],
         transitions: vec![trans]
     };
 
@@ -73,6 +74,7 @@ fn test_scheduler_starvation_fairness_flood() {
         scope: None,
         state_schema: vec![],
         goals: vec![],
+        invariants: vec![],
         transitions: vec![trans1, trans2]
     };
 
