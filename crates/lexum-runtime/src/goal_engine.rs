@@ -1,5 +1,5 @@
 use crate::interpreter::Interpreter;
-use ved_ir::bytecode::{GoalBytecode, OpCode};
+use Lexum_ir::bytecode::{GoalBytecode, OpCode};
 use crate::state::IsolatedState;
 
 pub struct GoalEngine;
@@ -28,11 +28,11 @@ impl GoalEngine {
             match inst {
                 OpCode::LoadConst { const_idx, dest_reg } => {
                     match &consts[*const_idx] {
-                        ved_ir::bytecode::Constant::Int(val) => {
+                        Lexum_ir::bytecode::Constant::Int(val) => {
                             interp.registers[*dest_reg as usize] = *val;
                             last_written_reg = Some(*dest_reg);
                         }
-                        ved_ir::bytecode::Constant::String(_) => { } // Unsupported in this basic version for eval
+                        Lexum_ir::bytecode::Constant::String(_) => { } // Unsupported in this basic version for eval
                     }
                 }
                 OpCode::LoadState { field_idx, dest_reg } => {
@@ -95,7 +95,7 @@ impl GoalEngine {
         }
     }
 
-    pub fn evaluate_invariant(invariant: &ved_ir::bytecode::InvariantBytecode, state: &IsolatedState, schema: &[String], gas_limit: usize) -> Result<bool, String> {
+    pub fn evaluate_invariant(invariant: &Lexum_ir::bytecode::InvariantBytecode, state: &IsolatedState, schema: &[String], gas_limit: usize) -> Result<bool, String> {
         let mut interp = Interpreter::with_state(state.snapshot());
         
         let mut gas_used = 0;
@@ -116,11 +116,11 @@ impl GoalEngine {
             match inst {
                 OpCode::LoadConst { const_idx, dest_reg } => {
                     match &consts[*const_idx] {
-                        ved_ir::bytecode::Constant::Int(val) => {
+                        Lexum_ir::bytecode::Constant::Int(val) => {
                             interp.registers[*dest_reg as usize] = *val;
                             last_written_reg = Some(*dest_reg);
                         }
-                        ved_ir::bytecode::Constant::String(_) => { }
+                        Lexum_ir::bytecode::Constant::String(_) => { }
                     }
                 }
                 OpCode::LoadState { field_idx, dest_reg } => {

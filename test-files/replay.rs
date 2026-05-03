@@ -1,7 +1,7 @@
 use std::process::Command;
 
 fn main() {
-    println!("Building ved-cli...");
+    println!("Building Lexum-cli...");
     let status = Command::new("cargo")
         .arg("build")
         .status()
@@ -12,14 +12,14 @@ fn main() {
     
     for _i in 0..10 {
         // Remove snapshot
-        let _ = std::fs::remove_file("test-files/phase6_test_nondeterminism.ved.snapshot.json");
+        let _ = std::fs::remove_file("test-files/phase6_test_nondeterminism.Lexum.snapshot.json");
         
         let output = Command::new("cargo")
             .arg("run")
             .arg("-p")
-            .arg("ved-cli")
+            .arg("Lexum-cli")
             .arg("run")
-            .arg("test-files/phase6_test_nondeterminism.ved")
+            .arg("test-files/phase6_test_nondeterminism.Lexum")
             .output()
             .expect("failed to execute process");
             

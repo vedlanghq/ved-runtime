@@ -1,9 +1,9 @@
 mod common;
-use ved_compiler::compile_source;
-use ved_runtime::domain_registry::{DomainInstance, DomainRegistry};
-use ved_runtime::scheduler::Scheduler;
-use ved_runtime::persistence::{SnapshotData, SnapshotManager};
-use ved_runtime::messaging::Message;
+use Lexum_compiler::compile_source;
+use Lexum_runtime::domain_registry::{DomainInstance, DomainRegistry};
+use Lexum_runtime::scheduler::Scheduler;
+use Lexum_runtime::persistence::{SnapshotData, SnapshotManager};
+use Lexum_runtime::messaging::Message;
 use std::fs;
 
 #[test]

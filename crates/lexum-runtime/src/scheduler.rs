@@ -3,7 +3,7 @@ use crate::interpreter::{Interpreter, SliceResult};
 use crate::persistence::SnapshotManager;
 use crate::goal_engine::GoalEngine;
 use crate::rng::DeterministicRng;
-use ved_tracer::Tracer;
+use Lexum_tracer::Tracer;
 
 #[derive(Debug, Clone)]
 pub struct ExecutionResult {
@@ -121,7 +121,7 @@ impl Scheduler {
                         match GoalEngine::evaluate_invariant(inv, &instance.state, &instance.schema, slice_gas_limit) {
                             Ok(false) => {
                                 self.tracer.record(cycle, &name, "INVARIANT_VIOLATED", &inv.name);
-                                trace.push(format!("[Scheduler Cycle {}] 🔴 FATAL: Domain '{}' INVARIANT VIOLATED: '{}'", cycle, name, inv.name));
+                                trace.push(format!("[Scheduler Cycle {}] Ã°Å¸â€Â´ FATAL: Domain '{}' INVARIANT VIOLATED: '{}'", cycle, name, inv.name));
                                 res.converged = false;
                                 res.warning_detected = true;
                                 res.trace = trace;
@@ -153,7 +153,7 @@ impl Scheduler {
                     }
                     
                     if instance.goal_oscillation_count >= 10 { // Allow some retries before failing
-                        trace.push(format!("[Scheduler] ⚠ OSCILLATION DETECTED: Domain '{}' oscillating on goal '{}'. Execution halted.", name, highest_priority_goal.name));
+                        trace.push(format!("[Scheduler] Ã¢Å¡Â  OSCILLATION DETECTED: Domain '{}' oscillating on goal '{}'. Execution halted.", name, highest_priority_goal.name));
                         res.converged = false;
                         res.oscillating = true;
                         res.warning_detected = true;
@@ -366,7 +366,7 @@ mod tests {
     use super::*;
     use crate::domain_registry::{DomainInstance, DomainRegistry};
     use crate::messaging::{Message, Mailbox};
-    use ved_ir::bytecode::{DomainBytecode, TransitionBytecode, OpCode, Constant};
+    use Lexum_ir::bytecode::{DomainBytecode, TransitionBytecode, OpCode, Constant};
 
     fn setup_registry() -> DomainRegistry {
         let mut registry = DomainRegistry::new();

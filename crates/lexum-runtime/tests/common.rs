@@ -1,7 +1,7 @@
-use ved_compiler::compile_source;
-use ved_runtime::domain_registry::{DomainInstance, DomainRegistry};
-use ved_runtime::scheduler::{Scheduler, ExecutionResult};
-use ved_runtime::messaging::Message;
+use Lexum_compiler::compile_source;
+use Lexum_runtime::domain_registry::{DomainInstance, DomainRegistry};
+use Lexum_runtime::scheduler::{Scheduler, ExecutionResult};
+use Lexum_runtime::messaging::Message;
 
 pub fn run_ved_program(source: &str, boot_messages: Vec<(&str, &str, u8)>, max_cycles: usize) -> ExecutionResult {
     let program = compile_source(source).unwrap();

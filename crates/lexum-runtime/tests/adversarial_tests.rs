@@ -1,7 +1,7 @@
-use ved_ir::bytecode::{TransitionBytecode, OpCode, Constant};
-use ved_runtime::interpreter::{Interpreter, SliceResult};
-use ved_runtime::messaging::{Message, Mailbox};
-use ved_runtime::state::IsolatedState;
+use Lexum_ir::bytecode::{TransitionBytecode, OpCode, Constant};
+use Lexum_runtime::interpreter::{Interpreter, SliceResult};
+use Lexum_runtime::messaging::{Message, Mailbox};
+use Lexum_runtime::state::IsolatedState;
 
 #[test]
 fn test_1c_instruction_budgeting() {

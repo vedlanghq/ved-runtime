@@ -1,7 +1,7 @@
-use ved_ir::bytecode::{OpCode, Constant, TransitionBytecode, DomainBytecode};
-use ved_runtime::scheduler::Scheduler;
-use ved_runtime::messaging::Message;
-use ved_runtime::domain_registry::{DomainRegistry, DomainInstance};
+use Lexum_ir::bytecode::{OpCode, Constant, TransitionBytecode, DomainBytecode};
+use Lexum_runtime::scheduler::Scheduler;
+use Lexum_runtime::messaging::Message;
+use Lexum_runtime::domain_registry::{DomainRegistry, DomainInstance};
 
 #[test]
 fn test_adversarial_infinite_loop_gas_limit() {

@@ -1,5 +1,5 @@
 [package]
-name = "ved-runtime"
+name = "Lexum-runtime"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,8 +7,8 @@ edition = "2021"
 rand = { version = "0.10.1", features = ["std"] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
-ved-ir = { path = "../ved-ir" }
-ved-tracer = { version = "0.1.0", path = "../ved-tracer" }
+Lexum-ir = { path = "../Lexum-ir" }
+Lexum-tracer = { version = "0.1.0", path = "../Lexum-tracer" }
 
 [dev-dependencies]
-ved-compiler = { path = "../../../ved-compiler" }
+Lexum-compiler = { path = "../../../Lexum-compiler" }

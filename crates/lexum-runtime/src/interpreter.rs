@@ -1,4 +1,4 @@
-use ved_ir::bytecode::{OpCode, Constant, TransitionBytecode};
+use Lexum_ir::bytecode::{OpCode, Constant, TransitionBytecode};
 use crate::messaging::Message;
 use crate::state::IsolatedState;
 
