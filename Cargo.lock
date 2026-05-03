@@ -478,32 +478,32 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
 
 [[package]]
-name = "ved-compiler"
+name = "lexum-compiler"
 version = "0.1.0"
 dependencies = [
  "miette",
  "thiserror",
- "ved-ir",
+ "lexum-ir",
 ]
 
 [[package]]
-name = "ved-ir"
+name = "lexum-ir"
 version = "0.1.0"
 
 [[package]]
-name = "ved-runtime"
+name = "lexum-runtime"
 version = "0.1.0"
 dependencies = [
  "rand",
  "serde",
  "serde_json",
- "ved-compiler",
- "ved-ir",
- "ved-tracer",
+ "lexum-compiler",
+ "lexum-ir",
+ "lexum-tracer",
 ]
 
 [[package]]
-name = "ved-tracer"
+name = "lexum-tracer"
 version = "0.1.0"
 dependencies = [
  "serde",
