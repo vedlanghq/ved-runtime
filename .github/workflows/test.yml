@@ -1,4 +1,4 @@
-name: Ved Tests
+name: Lexum Tests
 
 on: [push, pull_request]
 
@@ -8,8 +8,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Checkout ved-compiler
-        run: git clone https://github.com/vedlanghq/ved-compiler.git ../ved-compiler
+      - name: Checkout lexum-compiler
+        run: git clone https://github.com/lexumlang/lexum-compiler.git ../lexum-compiler
 
       - name: Build
         run: cargo build --release
