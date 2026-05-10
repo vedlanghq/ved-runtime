@@ -2,8 +2,8 @@ use std::process::Command;
 use std::fs;
 
 fn main() {
-    let source_file = "../Lexum-examples/public-demo/demo.Lexum";
-    let snapshot_file = "../Lexum-examples/public-demo/demo.Lexum.snapshot.json";
+    let source_file = "../lexum-examples/public-demo/demo.lxm";
+    let snapshot_file = "../lexum-examples/public-demo/demo.lxm.snapshot.json";
     
     // Clean up any old snapshot
     let _ = fs::remove_file(snapshot_file);

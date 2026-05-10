@@ -12,14 +12,15 @@ fn main() {
     
     for _i in 0..10 {
         // Remove snapshot
-        let _ = std::fs::remove_file("test-files/phase6_test_nondeterminism.Lexum.snapshot.json");
-        
-        let output = Command::new("cargo")
-            .arg("run")
+        let _ = std::fs::remove_file("test-files/phase6_test_nondeterminism.lxm.snapshot.json");
+        let _ = std::fs::remove_file("test-files/phase6_test_nondeterminism.lxm.journal.json");
+
+        let mut cmd = Command::new("cargo");
+        let output = cmd.arg("run")
             .arg("-p")
-            .arg("Lexum-cli")
-            .arg("run")
-            .arg("test-files/phase6_test_nondeterminism.Lexum")
+            .arg("lexum-cli")
+            .arg("apply")
+            .arg("test-files/phase6_test_nondeterminism.lxm")
             .output()
             .expect("failed to execute process");
             
